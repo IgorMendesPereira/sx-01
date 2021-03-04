@@ -1,0 +1,28 @@
+body {
+	font-weight: bolder;
+    font-size: 25px;
+	color: rgb(0, 0, 0);
+
+
+}
+sentido{
+    background-color:blue;
+    color: white;
+}
+.h2{
+    background-color:black;
+    width: 10000000px;
+    height: 5000px;
+    left: 10px;
+}
+
+button {
+    background-color:green;
+    color: white;
+    border-width: 1px;
+    width: 100px;
+    height: 50px;
+    left: 10px;
+
+
+}
