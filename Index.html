@@ -5,27 +5,38 @@
     <link rel="stylesheet " type="text/css" href="styles.css" media="screen" />
     <title> Soil </title>
 
-<body>
-    <form>
-        <div align='center'>
+<body >
+    <form align='center'>
+        <div id="container">
             <h1>Pivo 1</h1>
-            <sentido class="h2"> Sentido:
-                <button name="AVANCO" value="ON" type="submit">AVANCO</button>
-                <button name="REVERSO" value="ON" type="submit">REVERSO</button><br>
-            </sentido>
-            <h3> Água:
-                <button name="SECO" value="ON" type="submit">SECO</button>
-                <button name="MOLHADO" value="ON" type="submit">MOLHADO</button><br>
-            </h3>
-            <button name="DESLIGA" value="ON" type="submit">DESLIGA</button><br>
 
-            <h4> Percentímetro :
-                <input type="number" value="000" name="PERC" min="0" max="100" step="1" onchange="submit()" />
-            </h4>
+            Sentido:
+            <button name="AVANCO" value="ON" type="submit">AVANCO</button>
+            <button name="REVERSO" value="ON" type="submit">REVERSO</button><br>
+
+            Água:
+            <button name="SECO" value="ON" type="submit">SECO</button>
+            <button name="MOLHADO" value="ON" type="submit">MOLHADO</button><br>
+
+            Percentímetro :
+            <input type="number" value="000" name="PERC" min="0" max="100" step="1" onchange="submit()" />
+            <br>
 
             <button name="Confirma" value="ON" type="submit">CONFIRMA</button>
+            <button name="DESLIGA" value="ON" type="submit">DESLIGA</button>
+
+            <hr color="gray">
+            <div>
+                <img src="logo_irrigabras.png" alt="some text" width=60% height=60%>
+            </div><br>
         </div>
     </form>
+    <div id='Powered'>
+        Powered by:
+        <img class="logosoil" src="logo_soil.png" alt="thsetser" width=120 height=120>
+
+    </div>
+
 </body>
 
 </html>
