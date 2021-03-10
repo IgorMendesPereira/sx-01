@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Soil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <h1>Pivo 1</h1>
+  <p>Estado Atual: <strong> %SENTIDO%</strong> <strong> %SECO%</strong><strong> %LIGADO%</strong></p>
+  Sentido:
+  <p><a href="/av"><button class="button">Avanco</button></a>
+  <a href="/rev"><button class="button button2">Reverso</button></a></p>
+  Agua:
+  <p><a href="/seco"><button class="button button3">Seco</button></a>
+  <a href="/molhado"><button class="button button4">Molhado</button></a></p>
+  <form action="/get">
+  Percentimetro <input type="number" step="1" min="0" max="100" name="percentimetro" value="%PERCENTIMETRO%"><br>
+  </form>
+  <p><a href="/desliga"><button class="button button6">Desliga</button></a></p>
+  <p><a href="/confirma"><button class="button button5">Confirma</button></a></p>
+  <hr color="gray">
+            <div>
+                <img src="logo_irrigabras.png" alt="logo_irrigabras" width=500% height=100%>
+            </div><br>
+
+	<div id='Powered'>
+        Powered by:
+        <img class="logosoil" src="logo_soil.png" alt="thsetser" width=120 height=120>
+
+    </div>		
+</body>
+</html>
