@@ -336,6 +336,7 @@ String processor(const String& var) {
 void setup() {
   // Serial port for debugging purposes
   Serial.begin(115200);
+  Serial2.begin(115200);
   pinMode(ledPin, OUTPUT);
   pinMode(LIGA, OUTPUT);
   pinMode(DESLIGA, OUTPUT);
@@ -461,11 +462,12 @@ void setup() {
 }
 
 void loop() {
+  Serial.println("ok");
   LeEntrada();
   tatual = millis();
   if (Serial2.available() == 5 || webflag == 1) { //se o software Serial2 receber uma mensagem de 3 bytes
     Leitura();
-
+    Serial.println("ok1");
 
     if (stats[0] == '0' && stats[1] == '0' && stats[2] == '0') {
       LeEntrada();
