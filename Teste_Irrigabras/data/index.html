@@ -8,7 +8,9 @@
 </head>
 <body>
   <h1>Pivo 1</h1>
-  <p>Estado Atual: <strong> %SENTIDO%</strong> <strong> %SECO%</strong><strong> %LIGADO%</strong></p>
+  <p>Estado Atual: <strong> %SENTIDO%</strong> <strong> %SECO%</strong><strong> %LIGADO%</strong>
+  <a style="text-decoration: none;" href="/"><input type=image src="./reload.png" width="50" height="40"> </a><br></p>
+  <p>Percentimetro: <strong> %PERC%</strong></p>
   Sentido:
   <p><a href="/av"><button class="button">Avanco</button></a>
   <a href="/rev"><button class="button button2">Reverso</button></a></p>
@@ -16,7 +18,7 @@
   <p><a href="/seco"><button class="button button3">Seco</button></a>
   <a href="/molhado"><button class="button button4">Molhado</button></a></p>
   <form action="/get">
-  Percentimetro <input type="number" step="1" min="0" max="100" name="percentimetro" value="%PERCENTIMETRO%"><br>
+  Percentimetro <input type="number" step="1" min="0" max="100" name="percentimetro" value="%PERCENTIMETRO%" onchange="submit()"><br>
   </form>
   <p><a href="/desliga"><button class="button button6">Desliga</button></a></p>
   <p><a href="/confirma"><button class="button button5">Confirma</button></a></p>
