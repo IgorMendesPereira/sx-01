@@ -12,6 +12,7 @@ void Desliga() {
   perc = 0;
   auxP = 0;
   num = 0;
+  numw = 0;
   aux2 = 0;
   digitalWrite(DESLIGA, HIGH);
 }

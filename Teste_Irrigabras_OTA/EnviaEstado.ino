@@ -25,7 +25,17 @@ void EnviaEstado() {   //ok
       digitalWrite(MOLHADO, HIGH);
     }
     if (stats[2] == '1') {
+      
       num = (stats[3] - '0') * 10 + (stats[4] - '0');
+      if(webflag == 1 && num!= numw){
+      num = numw;
+      }else{
+        if(stats[3] == '1' && stats[4] == '0' && stats[5] == '0'){
+          
+        }else{
+        num = (stats[3] - '0') * 10 + (stats[4] - '0');
+        }
+      }
       digitalWrite(LIGA, LOW);
       digitalWrite(RAUX, LOW);
       digitalWrite(DESLIGA, HIGH);

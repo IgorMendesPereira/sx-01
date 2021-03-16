@@ -53,6 +53,7 @@ String STRperc;
 
 int auxPa = 0;
 
+int numw;
 int num;
 int aux2 = 0;
 
@@ -115,6 +116,8 @@ void setup() {
   digitalWrite(ledPin, HIGH);
   delay(100);
   digitalWrite(ledPin, LOW);
+  delay(100);
+  digitalWrite(ledPin, HIGH);
   
   // Initialize SPIFFS
 
@@ -151,6 +154,7 @@ void setup() {
   })
   .onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("Progress: %u%%r", (progress / (total / 100)));
+    digitalWrite(2, !digitalRead(2));
   })
   .onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
@@ -227,8 +231,10 @@ void setup() {
     }
     Serial.print(INWEB);
     Serial.println(inputMessage);
+    if(percs != inputMessage){
     percs = inputMessage;
-    num = percs.toInt();
+    numw = percs.toInt();
+    }
     webflag = 1;
     request->send(SPIFFS, "/index.html", String(), false, processor);
   });
@@ -261,7 +267,6 @@ void loop() {
     digitalWrite(2, !digitalRead(2));
     Leitura();
     Serial.println("ok1");
-
     if (stats[0] == '0' && stats[1] == '0' && stats[2] == '0') {
       LeEntrada();
       EnviaStatus();

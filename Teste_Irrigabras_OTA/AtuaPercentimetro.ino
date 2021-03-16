@@ -1,5 +1,5 @@
 void AtuaPercentimetro() {
-
+  
   if (num == 0) {
     aux2 = 0;
     t4 = 0;
