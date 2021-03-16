@@ -16,23 +16,19 @@
 #define PERC              5             //PERCENTIMETRO
 
 
-// Replace with your network credentials
 const char* ssid = "ESP32teste";
 const char* password = "senhasenha";
 const char* PARAM_INPUT_1 = "percentimetro";
 
-unsigned long previousMillis = 0;
-const long interval = 5000;
-
 String inputMessage = "100";
-String valueString = String(5);
 
 char INWEB[3];
 char EstadoAtual[3];
 
 // Set LED GPIO
 const int ledPin = 2;
-// Stores LED state
+
+// Estado apresentado na pagina web
 String sentidow;
 String secow;
 String ligadow;
@@ -263,5 +259,4 @@ void loop() {
   }
   Percentimetro();
   AtuaPercentimetro();
-
 }
