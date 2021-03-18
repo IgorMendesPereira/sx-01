@@ -14,9 +14,9 @@ String processor(const String& var) {
     return sentidow;
   }
   if (var == "SECO") {
-    if (seco == "seco") {
+    if (seco == "Seco") {
       secow = "Seco";
-    } else if (seco == "molhado") {
+    } else if (seco == "Molhado") {
       secow = "Molhado";
     }
     if (EstadoAtual[2] == '2') {
@@ -39,5 +39,8 @@ String processor(const String& var) {
   if (var == "PERC") {
     return STRperc;
   }
-  return String();
+  if (var == "HORA") {
+    return String(hora);
+  }
+  return String(); 
 }

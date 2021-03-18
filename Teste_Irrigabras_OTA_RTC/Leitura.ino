@@ -1,7 +1,7 @@
 void Leitura() {
   for (int i = 0; i <= 5; i++) {
     
-    stats[i] = Serial2.read();                //le a entrada Serial2, byte por byte
+    stats[i] = Serial.read();                //le a entrada Serial, byte por byte
   }
   if(webflag == 1){
     stats[0] = INWEB[0];

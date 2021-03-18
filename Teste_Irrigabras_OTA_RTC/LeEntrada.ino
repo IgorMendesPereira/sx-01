@@ -2,11 +2,11 @@ void LeEntrada() {
   
   if (digitalRead(PRESS) == HIGH) {
     EstadoAtual[1] = '5';
-    seco = "seco";
+    seco = "Seco";
   }
   if (digitalRead(PRESS) == LOW) {
     EstadoAtual[1] = '6';
-    seco = "molhado";
+    seco = "Molhado";
 
   }
   if (digitalRead(AVREAL) == HIGH && digitalRead(RTREAL) == HIGH) { //CONTATORA NC >>>> AQ LOW E RESTO HIGH
