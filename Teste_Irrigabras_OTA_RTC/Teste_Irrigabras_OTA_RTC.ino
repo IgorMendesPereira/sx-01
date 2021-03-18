@@ -145,7 +145,12 @@ void setup() {
     while (1);
   }
 
-  //rtc.adjust(DateTime(__DATE__, __TIME__));
+//******************************************IMPORTANTISSIMO*******************************************************************************************
+//Apos gravar a primeira vez, comentar a lina rtc.adjust
+
+//rtc.adjust(DateTime(__DATE__, __TIME__));
+  
+//******************************************IMPORTANTISSIMO*******************************************************************************************
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
