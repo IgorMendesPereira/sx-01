@@ -42,5 +42,11 @@ String processor(const String& var) {
   if (var == "HORA") {
     return String(hora);
   }
+  if (var == "ANG") {
+    return String(angulo);
+  }
+  if (var == "RSSI") {
+    return String(rssi);
+  }
   return String(); 
 }

@@ -4,26 +4,38 @@
 #include "ESPmDNS.h"
 #include "WiFiUdp.h"
 #include "ArduinoOTA.h"
-#include "Wire.h"
-#include "RTClib.h"
+#include "SPI.h"
+#include "LoRa.h"
+
 
 #define LIGA              13              //mesmo que 1En5
-#define DESLIGA           12             //RUIM
-#define AVANCO            14           //RUIM
-#define REVERSO           27            //mesmo que 0
-#define MOLHADO           26              //mesmo que 14
-#define RAUX              25          //RUIM
-#define RAUXP              33
-#define PERCAT             32
-#define AVREAL            23            //16  avanço lido
-#define RTREAL            19              //RETORNO LIDO
-#define PRESS             18              //PRESSOSTATO
-#define PERC              5             //PERCENTIMETRO
+#define DESLIGA           14             //RUIM
+#define AVANCO            25           //RUIM
+#define REVERSO           33           //mesmo que 0
+#define MOLHADO           32              //mesmo que 14
+#define RAUX              35          //RUIM
+#define RAUXP             15
+#define PERCAT            21
+#define AVREAL            22            //16  avanço lido
+#define RTREAL            0              //RETORNO LIDO
+#define PRESS             4              //PRESSOSTATO
+#define PERC              23             //PERCENTIMETRO
 
-RTC_DS3231 rtc;
+#define SCK 5
+#define MISO 19
+#define MOSI 27
+#define SS 18
+#define RST 14
+#define DIO0 26
 
-const char* ssid = "ESP32teste";
-const char* password = "senhasenha";
+#define BAND 915E6
+
+String LoRaData;
+
+int rssi;
+
+const char* ssid = "Painel Soil";
+const char* password = "Soil2021";
 const char* PARAM_INPUT_1 = "percentimetro";
 
 String inputMessage = "100";
@@ -39,18 +51,21 @@ String sentidow;
 String secow;
 String ligadow;
 
-String seg;
-String minuto;
-String horas;
-String dia;
-String mes;
-String ano;
-String hora;
-
+//String seg;
+//String minuto;
+//String horas;
+//String dia;
+//String mes;
+//String ano;
+//String hora;
+//
 
 String sentido = "";
 String seco = "";
 String ligado = "";
+
+String angulo;
+String hora;
 
 int webflag = 0;
 String percs;
@@ -69,7 +84,7 @@ int num;
 int aux2 = 0;
 
 
-unsigned long lastTime = 0;  
+unsigned long lastTime = 0;
 unsigned long timerDelay = 1000;
 unsigned long tatual = 0;
 unsigned long t2 = 0;
@@ -140,17 +155,24 @@ void setup() {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
-  if (! rtc.begin()) {
-    Serial.println("Não foi possível encontrar RTC");
+
+  SPI.begin(SCK, MISO, MOSI, SS);
+  //setup LoRa transceiver module
+  LoRa.setPins(SS, RST, DIO0);
+
+  if (!LoRa.begin(BAND)) {
+    Serial.println("Starting LoRa failed!");
     while (1);
   }
 
-//******************************************IMPORTANTISSIMO*******************************************************************************************
-//Apos gravar a primeira vez, comentar a lina rtc.adjust
 
-//rtc.adjust(DateTime(__DATE__, __TIME__));
-  
-//******************************************IMPORTANTISSIMO*******************************************************************************************
+
+  //******************************************IMPORTANTISSIMO*******************************************************************************************
+  //Apos gravar a primeira vez, comentar a lina rtc.adjust
+
+  //rtc.adjust(DateTime(__DATE__, __TIME__));
+
+  //******************************************IMPORTANTISSIMO*******************************************************************************************
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -164,6 +186,7 @@ void setup() {
   IPAddress IP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(IP);
+
 
   ArduinoOTA
   .onStart([]() {
@@ -281,8 +304,8 @@ void setup() {
   });
 
   // Start server
-  events.onConnect([](AsyncEventSourceClient *client){
-    if(client->lastId()){
+  events.onConnect([](AsyncEventSourceClient * client) {
+    if (client->lastId()) {
       Serial.printf("Client reconnected! Last message ID that it got is: %u\n", client->lastId());
     }
     // send event with message "hello!", id current millis
@@ -295,14 +318,31 @@ void setup() {
 
 void loop() {
   ArduinoOTA.handle();
-  DateTime now = rtc.now();
-  horas = now.hour();
-  minuto = now.minute();
-  seg = now.second();
-  dia = now.day();
-  mes = now.month();
-  ano = now.year();
-  hora = String(horas + ":" + minuto + ":" + seg + " - " + dia + "/" + mes + "/" + ano);
+  int packetSize = LoRa.parsePacket();
+  if (packetSize) {
+
+    while (LoRa.available()) {
+      LoRaData = LoRa.readString();
+      //Serial.print(LoRaData);
+      rssi = LoRa.packetRssi();
+      //      Serial.print(" ");
+            Serial.println(rssi);
+      //Serial.print(LoRaData);
+      int separa = LoRaData.indexOf('-');
+      int fim = LoRaData.indexOf('#');
+      if (separa >= 0) {
+        angulo = LoRaData.substring(0, separa);
+        hora = LoRaData.substring((separa + 1), (fim));
+        //        Serial.println(angulo);
+        //        Serial.println(horario);
+      }
+
+    }
+  }
+
+
+
+  //Serial.print(horario);
   LeEntrada();
   tatual = millis();
   if (Serial.available() == 5 || webflag == 1) { //se o software Serial receber uma mensagem de 3 bytes
@@ -348,12 +388,14 @@ void loop() {
     cont = 0;
   }
   if ((millis() - lastTime) > timerDelay) {
-    events.send("ping",NULL,millis());
-    events.send(String(sentido).c_str(),"sentido",millis());
-    events.send(String(seco).c_str(),"seco",millis());
-    events.send(String(ligado).c_str(),"ligado",millis());
-    events.send(String(STRperc).c_str(),"STRperc",millis());
-    events.send(String(hora).c_str(),"hora",millis());
+    //events.send("ping", NULL, millis());
+    events.send(String(sentido).c_str(), "sentido", millis());
+    events.send(String(seco).c_str(), "seco", millis());
+    events.send(String(ligado).c_str(), "ligado", millis());
+    events.send(String(STRperc).c_str(), "STRperc", millis());
+    events.send(String(hora).c_str(), "hora", millis());
+    events.send(String(angulo).c_str(), "angulo", millis());
+    events.send(String(rssi).c_str(), "rssi", millis());
     lastTime = millis();
   }
   Percentimetro();

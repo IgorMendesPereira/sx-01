@@ -8,7 +8,10 @@ void EnviaStatus() {
   Serial.print("-");
   Serial.print(perc);
   Serial.print("-");
+  Serial.print(angulo);
+  Serial.print("-");
   Serial.print(hora);
+//  Serial.print(hora);
 
   //Serial.print(disp);
   EstadoAtual[0] = '0';
