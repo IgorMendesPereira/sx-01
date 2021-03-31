@@ -48,3 +48,16 @@ p{
   font-size: 30px;
   margin-left:10%;
 }
+
+grafico {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-image: conic-gradient(blue 0 calc(var(--radius)*1deg), lightblue 0 0);
+}
+grafico {
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
