@@ -160,10 +160,10 @@ void setup() {
   //setup LoRa transceiver module
   LoRa.setPins(SS, RST, DIO0);
 
-  if (!LoRa.begin(BAND)) {
-    Serial.println("Starting LoRa failed!");
-    while (1);
-  }
+//  if (!LoRa.begin(BAND)) {
+//    Serial.println("Starting LoRa failed!");
+//    while (1);
+//  }
 
 
 

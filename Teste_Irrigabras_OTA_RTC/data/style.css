@@ -49,15 +49,34 @@ p{
   margin-left:10%;
 }
 
-grafico {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background-image: conic-gradient(blue 0 calc(var(--radius)*1deg), lightblue 0 0);
-}
-grafico {
+#idgrafico {
   margin: auto;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.avancoligado {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-image: conic-gradient( blue 0 calc(var(--radius)*1deg), lightgray 0 0);
+}
+.avancodesligado {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-image: conic-gradient( #A2A638 0 calc(var(--radius)*1deg), lightgray 0 0);
+}
+.reversoligado{
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-image: conic-gradient( lightgray 0 calc(360deg - var(--radius)*1deg ), blue 0 calc(var(--radius)*1deg));
+}
+.reversodesligado{
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-image: conic-gradient( lightgray 0 calc(360deg - var(--radius)*1deg ), #A2A638 0 calc(var(--radius)*1deg));
 }
