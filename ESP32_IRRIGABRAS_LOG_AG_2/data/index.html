@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Soil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+  <h1>Pivo 1</h1>
+  <p><span class="reading"><span id="hora">%HORA%</span></span></p>
+  <p>Estado Atual: <span class="reading"><span id="sent">%SENTIDO%</span></span> <span class="reading"><span
+        id="ag">%SECO%</span></span> <span class="reading"><span id="liga">%LIGADO%</span></span>
+  <p>Percentimetro: <span class="reading"><span id="perc">%PERC%</span>&#37;</span></p>
+  <p>Posicao: <span class="reading"><span id="angulo">%ANG%</span>&deg;</span></p>
+  <div id="idgrafico" class="" style=--radius:%ANG%></div>
+
+  Sentido:
+  <p><a href="/av"><button class="button">Avanco</button></a>
+    <a href="/rev"><button class="button button2">Reverso</button></a>
+  </p>
+  Agua:
+  <p><a href="/seco"><button class="button button3">Seco</button></a>
+    <a href="/molhado"><button class="button button4">Molhado</button></a>
+  </p>
+  <form action="/get">
+    Percentimetro <input type="number" step="1" min="0" max="100" name="percentimetro" value="%PERCENTIMETRO%"
+      onchange="submit()"><br>
+  </form>
+  <p><a href="/desliga"><button class="button button6">Desliga</button></a></p>
+  <p><a href="/confirma"><button class="button button5">Confirma</button></a></p>
+  <a href="/agen"><button class="button buttonag">Agendamento</button></a>
+  <hr color="gray">
+  <div>
+    <img src="logo_irrigabras.png" alt="logo_irrigabras" width=500% height=100%>
+  </div><br>
+
+  <div id='Powered'>
+    Powered by:
+    <img class="logosoil" src="logo_soil.png" alt="thsetser" width=120 height=120>
+
+  </div>
+  <script>
+
+
+    if (!!window.EventSource) {
+      var source = new EventSource('/events');
+      source.addEventListener('open', function (e) {
+        console.log("Events Connected");
+      }, false);
+      source.addEventListener('error', function (e) {
+        if (e.target.readyState != EventSource.OPEN) {
+          console.log("Events Disconnected");
+        }
+      }, false);
+
+      source.addEventListener('message', function (e) {
+        console.log("message", e.data);
+      }, false);
+
+      source.addEventListener('sentido', function (e) {
+        console.log("sentido", e.data);
+        document.getElementById("sent").innerHTML = e.data;
+      }, false);
+
+      source.addEventListener('seco', function (e) {
+        console.log("seco", e.data);
+        document.getElementById("ag").innerHTML = e.data;
+      }, false);
+
+      source.addEventListener('ligado', function (e) {
+        console.log("ligado", e.data);
+        document.getElementById("liga").innerHTML = e.data;
+      }, false);
+
+      source.addEventListener('STRperc', function (e) {
+        console.log("percentimetro", e.data);
+        document.getElementById("perc").innerHTML = e.data;
+      }, false);
+
+      source.addEventListener('hora', function (e) {
+        console.log("hora", e.data);
+        document.getElementById("hora").innerHTML = e.data;
+      }, false);
+      source.addEventListener('angulo', function (e) {
+        console.log("angulo", e.data);
+        document.getElementById("angulo").innerHTML = e.data;
+      }, false);
+      source.addEventListener('rssi', function (e) {
+        console.log("rssi", e.data);
+      }, false);
+    }
+
+    var idgrafico = document.getElementById("idgrafico");
+    //var permissoesLogin = window.prompt('csk')
+    var sentido = document.getElementById("sent").innerHTML;
+    var agua = document.getElementById("ag").innerHTML;
+
+    if (sentido == "Avanco" && agua == "Molhado") {
+      idgrafico.className = "avancoligado";
+
+    } else if (sentido == "Avanco" && agua == "Seco") {
+      idgrafico.className = "avancodesligado";
+
+    } else if (sentido == "Reverso" && agua == "Molhado") {
+      idgrafico.className = "reversoligado";
+
+    } else if (sentido == "Reverso" && agua == "Seco") {
+      idgrafico.className = "reversodesligado";
+
+    }
+    else {
+    }
+
+   
+
+
+  </script>
+</body>
+
+</html>

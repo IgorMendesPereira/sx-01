@@ -1,0 +1,14 @@
+html {
+    font-family: Helvetica;
+    display: inline-block;
+    margin: 0px auto;
+    text-align: center;
+    background-color:rgb(189,236,182,0.6);
+  }
+  h1{
+    color: #0F3376;
+    padding: 2vh;
+  }
+  p{
+    font-size: 1.5rem;
+  }
