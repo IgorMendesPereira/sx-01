@@ -12,13 +12,13 @@
 #include "FS_File_Record.h"
 #include "FS_File_Record2.h"
 #include "FS_File_Record3.h"
-#include "logo.h"
+//#include "logo.h"
 
 #define LIGA              3
-#define DESLIGA           23             //RUIM
+#define DESLIGA           1             //RUIM
 #define AVANCO            0           //RUIM
 #define REVERSO           22           //mesmo que 0
-#define MOLHADO           1             //mesmo que 14
+#define MOLHADO           23            //mesmo que 14
 #define RAUX              15       //RUIM
 #define RAUXP             2
 #define PERCAT            4
@@ -51,6 +51,8 @@ String LoRaData;
 
 int rssi;
 
+String TIPO;
+
 int PROGMEM horaag[4];
 String PROGMEM atuaag[4];
 String atuaP[10];
@@ -59,7 +61,7 @@ int PROGMEM contag;
 int PROGMEM contpos;
 
 const char* ssid = "Poligamia";
-const char* password = "00347318580";
+const char* password = "0034731858";
 
 const char* ssidap = "Painel Soil";
 const char* passwordap = "soil2021";
@@ -76,6 +78,7 @@ const char* PARAM_INPUT_2_5 = "horario2";
 const char* PARAM_INPUT_3_1 = "Estado2";
 const char* PARAM_INPUT_3_3 = "angulo1";
 const char* PARAM_INPUT_3_4 = "angulo2";
+const char* PARAM_CONTATORA = "inputTipo";
 String inputMessage = "100";
 
 char INWEB[3];
@@ -413,6 +416,9 @@ void setup()
   server.on( "/", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/index.html", String(), false, processor);
   });
+  server.on("/config", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/config.html", String(), false, processor);
+  });
   server.on( "/agenda", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/agenda.html", String(), false, processor);
   });
@@ -434,9 +440,14 @@ void setup()
     request->send(SPIFFS, "/reload.png");
   });
 
-  //percentimetro
-
   server.on("/get", HTTP_GET, [] (AsyncWebServerRequest * request) {
+    
+    if (request->hasParam(PARAM_CONTATORA)) {
+//      Serial.println("mama me olhando");
+//      Serial.println(request->getParam(PARAM_CONTATORA)->value());
+      TIPO = request->getParam(PARAM_CONTATORA)->value();
+      writeFile(SPIFFS, "/contator.txt", TIPO.c_str());
+    }
 
     if (request->hasParam(PARAM_INPUT_2_1)) {
 
@@ -599,7 +610,7 @@ void setup()
           }
         }
         Serial.print(INWEB);
-        Serial.println(inputMessage);
+        //Serial.println(inputMessage);
         webflag = 1;
       } else {
         if (request->getParam(PARAM_INPUT_0)->value() == "2") {
@@ -609,7 +620,7 @@ void setup()
           inputMessage = "000";
 
           Serial.print(INWEB);
-          Serial.println(inputMessage);
+          //Serial.println(inputMessage);
           webflag = 1;
         }
       }
@@ -621,7 +632,7 @@ void setup()
 
   });
   server.on("/agen", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/agendaH.html", String(), false, processor);
+    request->send(SPIFFS, "/agenda.html", String(), false, processor);
   });
   server.on("/xama", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", String(String(EstadoAtual[0]) + "-" +  String(EstadoAtual[1]) + "-" + String(EstadoAtual[2]) + "-" + String(perc) + "-" + String(angulo.toInt())));
@@ -640,71 +651,9 @@ void setup()
       atuaag[i] = " ";
     }
     Serial.println("Delete ag OK");
-    request->send(SPIFFS, "/agendaH.html", String(), false, processor);
+    request->send(SPIFFS, "/agenda.html", String(), false, processor);
   });
 
-
-
-
-  //  // Avanço
-  //
-  //  server.on("/av", HTTP_GET, [](AsyncWebServerRequest * request) {
-  //    INWEB[0] = '3';
-  //    request->send(SPIFFS, "/index.html", String(), false, processor);
-  //  });
-  //
-  //  // Reverso
-  //
-  //  server.on("/rev", HTTP_GET, [](AsyncWebServerRequest * request) {
-  //    INWEB[0] = '4';
-  //    request->send(SPIFFS, "/index.html", String(), false, processor);
-  //  });
-  //
-  //  // Seco
-  //
-  //  server.on("/seco", HTTP_GET, [](AsyncWebServerRequest * request) {
-  //    INWEB[1] = '5';
-  //    request->send(SPIFFS, "/index.html", String(), false, processor);
-  //  });
-  //  // Molhado
-  //
-  //  server.on("/molhado", HTTP_GET, [](AsyncWebServerRequest * request) {
-  //    INWEB[1] = '6';
-  //    request->send(SPIFFS, "/index.html", String(), false, processor);
-  //  });
-  //  // Confirma
-  //
-  //  server.on("/confirma", HTTP_GET, [](AsyncWebServerRequest * request) {
-  //
-  //    if (INWEB[0] == '3' || INWEB[0] == '4') {
-  //      INWEB[2] = '1';
-  //    } else {
-  //      INWEB[2] = '2';
-  //    }
-  //    Serial.print(INWEB);
-  //    Serial.println(inputMessage);
-  //    if (percs != inputMessage) {
-  //      percs = inputMessage;
-  //      numw = percs.toInt();
-  //    }
-  //    webflag = 1;
-  //    request->send(SPIFFS, "/index.html", String(), false, processor);
-  //  });
-
-  // Desliga
-
-//  server.on("/desliga", HTTP_GET, [](AsyncWebServerRequest * request) {
-//
-//    INWEB[0] = '0';
-//    INWEB[1] = '0';
-//    INWEB[2] = '2';
-//    inputMessage = "000";
-//
-//    //Serial.print(INWEB);
-//    // Serial.println(inputMessage);
-//    webflag = 1;
-//    request->send(SPIFFS, "/index.html", String(), false, processor);
-//  });
 
   // Start server
   events.onConnect([](AsyncEventSourceClient * client) {
@@ -978,4 +927,36 @@ void loop()
   AtuaAg();
   AtuaPOS();
 
+}
+
+String readFile(fs::FS &fs, const char * path) {
+  //Serial.printf("Reading file: %s\r\n", path);
+  File file = fs.open(path, "r");
+  if (!file || file.isDirectory()) {
+    Serial.println("- empty file or failed to open file");
+    return String();
+  }
+  //Serial.println("- read from file:");
+  String fileContent;
+  while (file.available()) {
+    fileContent += String((char)file.read());
+  }
+  file.close();
+  //Serial.println(fileContent);
+  return fileContent;
+}
+
+void writeFile(fs::FS &fs, const char * path, const char * message) {
+  //Serial.printf("Writing file: %s\r\n", path);
+  File file = fs.open(path, "w");
+  if (!file) {
+    Serial.println("- failed to open file for writing");
+    return;
+  }
+  if (file.print(message)) {
+    //Serial.println("- file written");
+  } else {
+    Serial.println("- write failed");
+  }
+  file.close();
 }

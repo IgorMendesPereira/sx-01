@@ -150,5 +150,9 @@ String processor(const String& var) {
     }
 
   }
+
+  if (var == "CONTATOR") {
+    return readFile(SPIFFS, "/contator.txt");
+  }
   return String();
 }
