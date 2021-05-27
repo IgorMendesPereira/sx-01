@@ -59,7 +59,7 @@ int PROGMEM contag;
 int PROGMEM contpos;
 
 const char* ssid = "Poligamia";
-const char* password = "0034731858";
+const char* password = "00347318580";
 
 const char* ssidap = "Painel Soil";
 const char* passwordap = "soil2021";
@@ -817,7 +817,7 @@ void loop()
         EnviaEstado();
         LeEntrada();
         EnviaStatus();
-        Serial.println("TOP");
+        //Serial.println("TOP");
         for (int i = 0; i <= buffersize; i++) {
           stats[i] = ' ';
         }
