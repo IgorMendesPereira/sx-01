@@ -7,7 +7,8 @@ void Desliga() {
   digitalWrite(MOLHADO, HIGH);
   digitalWrite(RAUXP, HIGH);
   digitalWrite(PERCAT, HIGH);
-  delay(1000);
+  delay(4000);
+  epoch = epoch +4;
   digitalWrite(DESLIGA, HIGH);
   perc = 0;
   auxP = 0;

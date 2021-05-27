@@ -8,12 +8,21 @@
     <h1>    
      Agendamento  
     </h1>
+    <label for="tipo">Tipo de Agendamento: </label>
+    <a href="/agendaP"><button class="button Horario">Posicao</button></a>
+    <a href="/agendaH"><button class="button Posicao">Horario</button></a>
     
 
 <p></p>
-<label for="tipo">Tipo de Agendamento: </label> 
-<a href="/agendaP"><button class="button Horario">Posicao</button></a>
-<a href="/agendaH"><button class="button Posicao">Horario</button></a>
+ 
+    <form action="/get">
+      Parada por Posicao: <input type="radio" name="Estado2" value="1"> Retorno Automatico: <input type="radio" name="Estado2" value="2"> <br>
+      <br>
+      Posicao de parada: <input type="number" id="angulo1" name="angulo1" min="1" max="360"> <br>
+      Parada ao retornar: <input type="number" id="angulo2" name="angulo2" min="1" max="360"> <br>
+      <br>
+      <input type="submit" value="Confirmar" class="button button">
+    </form><br>
 
     <h1>  
     Agendamentos Programados

@@ -11,21 +11,22 @@
 #include <Arduino.h>
 #include "FS_File_Record.h"
 #include "FS_File_Record2.h"
+#include "FS_File_Record3.h"
 #include "logo.h"
 
-#define LIGA              32
-#define DESLIGA           33             //RUIM
-#define AVANCO            25           //RUIM
-#define REVERSO           12           //mesmo que 0
-#define MOLHADO           13              //mesmo que 14
-#define RAUX              21       //RUIM
-#define RAUXP             22
-#define PERCAT            23
+#define LIGA              3
+#define DESLIGA           23             //RUIM
+#define AVANCO            0           //RUIM
+#define REVERSO           22           //mesmo que 0
+#define MOLHADO           1             //mesmo que 14
+#define RAUX              15       //RUIM
+#define RAUXP             2
+#define PERCAT            4
 
 #define AVREAL            36            //16  avanço lido
-#define RTREAL            38              //RETORNO LIDO
+#define RTREAL            37              //RETORNO LIDO
 #define PRESS             39             //PRESSOSTATO
-#define PERC              37             //PERCENTIMETRO
+#define PERC              38             //PERCENTIMETRO
 
 //LoRA SPI
 
@@ -39,33 +40,42 @@
 #define BAND 915E6
 
 #define PABOOST true
-SSD1306 display(0x3c, 4, 15);
+//SSD1306 display(0x3c, 4, 15);
 
 //void TaskAtuaAg( void *pvParameters );
+void taskDES( void *pvParameters );
 
-hw_timer_t *timer = NULL; 
+hw_timer_t *timer = NULL;
 
 String LoRaData;
 
 int rssi;
 
-int PROGMEM horaag[10];
-String PROGMEM atuaag[10];
+int PROGMEM horaag[4];
+String PROGMEM atuaag[4];
+String atuaP[10];
+int pos[10];
 int PROGMEM contag;
+int PROGMEM contpos;
 
-
-const char* ssid = "Soil";
-const char* password = "soil2021";
+const char* ssid = "Poligamia";
+const char* password = "0034731858";
 
 const char* ssidap = "Painel Soil";
 const char* passwordap = "soil2021";
 
+const char* PARAM_INPUT_0 = "Estado";
+const char* PARAM_INPUT_0_2 = "sentido";
+const char* PARAM_INPUT_0_3 = "seco";
 const char* PARAM_INPUT_1 = "percentimetro";
 const char* PARAM_INPUT_2_1 = "Estado1";
 const char* PARAM_INPUT_2_2 = "sentido1";
 const char* PARAM_INPUT_2_3 = "seco1";
 const char* PARAM_INPUT_2_4 = "horario1";
 const char* PARAM_INPUT_2_5 = "horario2";
+const char* PARAM_INPUT_3_1 = "Estado2";
+const char* PARAM_INPUT_3_3 = "angulo1";
+const char* PARAM_INPUT_3_4 = "angulo2";
 String inputMessage = "100";
 
 char INWEB[3];
@@ -75,7 +85,7 @@ char EstadoAnterior[3];
 int flagmem = 0;
 
 long epoch;
-
+int endloop;
 // Estado apresentado na pagina web
 
 String sentidow;
@@ -95,10 +105,12 @@ String percs;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-char stats[10];  // para entrada Serial
+char stats[15];  // para entrada Serial.
 
 int auxP = 0;
 int perc = 0;
+
+int RETflag = 0;
 
 String STRperc;
 
@@ -134,10 +146,12 @@ int id;
 String values;
 int registros;
 int registros2;
+int registros3;
 
 // Objeto da nossa lib que recebe o nome do arquivo e tamanho fixo de registro
 FS_File_Record ObjFS("/teste.bin", sizeOfRecord);
 FS_File_Record2 AgFS("/agenda.bin", sizeOfRecord);
+FS_File_Record3 PosFS("/agendaPOS.bin", 10);
 
 
 String dados;
@@ -150,19 +164,19 @@ String errorMsg;
 String lastRecord = "";
 
 
-void IRAM_ATTR resetModule(){
-ets_printf("(watchdog) reiniciar\n"); //imprime no log
-esp_restart(); //reinicia o chip
+void IRAM_ATTR resetModule() {
+  ets_printf("(watchdog) reiniciar\n"); //imprime no log
+  esp_restart(); //reinicia o chip
 }
 
 void configureWatchdog()
 {
-timer = timerBegin(0, 80, true); //timerID 0, div 80
-//timer, callback, interrupção de borda
-timerAttachInterrupt(timer, &resetModule, true);
-//timer, tempo (us), repetição
-timerAlarmWrite(timer, 5*1000000, true);
-timerAlarmEnable(timer); //habilita a interrupção //enable interrupt
+  timer = timerBegin(0, 80, true); //timerID 0, div 80
+  //timer, callback, interrupção de borda
+  timerAttachInterrupt(timer, &resetModule, true);
+  //timer, tempo (us), repetição
+  timerAlarmWrite(timer, 5 * 1000000, true);
+  timerAlarmEnable(timer); //habilita a interrupção //enable interrupt
 }
 
 // Replaces placeholder with LED state value
@@ -206,27 +220,56 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
 //  }
 //}
 
+void TaskDES( void *pvParameters) {
+  //  Serial.print("Task1 running on core ");
+  //  Serial.println(xPortGetCoreID());
+  for (;;) {
+    timerWrite(timer, 0);
+    if (digitalRead(AVREAL) == LOW && digitalRead(RTREAL) == LOW) {
+      timerWrite(timer, 0);
+      cont++;
+      delay(100);
+      if (cont > 50) {
+        digitalWrite(LIGA, HIGH);
+        digitalWrite(DESLIGA, HIGH);
+        digitalWrite(AVANCO, HIGH);
+        digitalWrite(REVERSO, HIGH);
+        digitalWrite(MOLHADO, HIGH);
+        digitalWrite(RAUX, HIGH);
+        digitalWrite(RAUXP, HIGH);
+        digitalWrite(PERCAT, HIGH);
+        cont = 0;
+        perc = 0;
+        auxP = 0;
+        num = 0;
+        aux2 = 0;
+        //epoch = epoch + 5;
+      }
+    } else {
+      cont = 0;
+    }
+    delay(10);
+  }
+}
+
 void setup()
 {
-  Serial2.begin(9600);
-  Serial.begin(115200);
+  Serial.begin(9600);
+  //Serial.begin(115200);
   configureWatchdog();
-  pinMode(16, OUTPUT); //RST do oled
-  digitalWrite(16, HIGH);
-  delay(50);
-  digitalWrite(16, LOW);    // reseta o OLED
-  delay(50);
-  digitalWrite(16, HIGH); // enquanto o OLED estiver ligado, GPIO16 deve estar HIGH
-  display.init();
-  display.flipScreenVertically();
+  //  pinMode(16, OUTPUT); //RST do oled
+  //  digitalWrite(16, HIGH);
+  //  delay(50);
+  //  digitalWrite(16, LOW);    // reseta o OLED
+  //  delay(50);
+  //  digitalWrite(16, HIGH); // enquanto o OLED estiver ligado, GPIO16 deve estar HIGH
+  //  display.init();
+  //  display.flipScreenVertically();
+  //  display.clear();
+  //  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  //  display.drawXbm(0, 0, logo_width, logo_height, logo_bits);
+  //  display.display();
 
-  display.clear();
-
-
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawXbm(0, 0, logo_width, logo_height, logo_bits);
-  display.display();
-  
   //Serial.begin(9600);
   pinMode(LIGA, OUTPUT);
   pinMode(DESLIGA, OUTPUT);
@@ -251,11 +294,11 @@ void setup()
   digitalWrite(RAUXP, HIGH);
   digitalWrite(PERCAT, HIGH);
 
-  // Iniciamos a Serial com velocidade de 115200
+  // Iniciamos a Serial. com velocidade de 115200
   EstadoAnterior[0] = EstadoAtual[0];
   EstadoAnterior[1] = EstadoAtual[1];
   EstadoAnterior[2] = EstadoAtual[2];
-  // Exibe na Serial "Starting..." para debug
+  // Exibe na Serial. "Starting..." para debug
   Serial.print("Starting...");
 
   // Se não foi possível iniciar o File System, exibimos erro e reiniciamos o ESP
@@ -281,7 +324,11 @@ void setup()
     Serial.println("New file AgFS");
     AgFS.newFile(); // Cria o arquivo
   }
-
+  if (!PosFS.fileExists())
+  {
+    Serial.println("New file PosFS");
+    PosFS.newFile(); // Cria o arquivo
+  }
   Agendamento();
   SPI.begin(SCK, MISO, MOSI, SS);
   //  //setup LoRa transceiver module
@@ -304,13 +351,13 @@ void setup()
   WiFi.softAP(ssidap, passwordap);
   WiFi.begin(ssid, password);
   int contw = 0;
-  while (WiFi.status() != WL_CONNECTED && contw!= 8) {
-    
+  while (WiFi.status() != WL_CONNECTED && contw != 8) {
+
     delay(500);
     Serial.println("Connecting to WiFi..");
     contw++;
   }
-  
+
   Serial.print("ESP32 IP as soft AP: ");
   Serial.println(WiFi.softAPIP());
 
@@ -332,6 +379,7 @@ void setup()
   })
   .onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("Progress: %u%%r", (progress / (total / 100)));
+    timerWrite(timer, 0);
     //digitalWrite(2, !digitalRead(2));
   })
   .onError([](ota_error_t error) {
@@ -352,6 +400,15 @@ void setup()
   //    1, // Priority
   //    NULL,
   //    0);
+
+  xTaskCreatePinnedToCore(
+    TaskDES,
+    "TaskDES",
+    10000,  // Stack size
+    NULL,
+    1, // Priority
+    NULL,
+    0);
 
   server.on( "/", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/index.html", String(), false, processor);
@@ -380,10 +437,7 @@ void setup()
   //percentimetro
 
   server.on("/get", HTTP_GET, [] (AsyncWebServerRequest * request) {
-    if (request->hasParam(PARAM_INPUT_1)) {
-      inputMessage = request->getParam(PARAM_INPUT_1)->value();
-      request->send(SPIFFS, "/index.html", String(), false, processor);
-    }
+
     if (request->hasParam(PARAM_INPUT_2_1)) {
 
       //String Sai = String(request->getParam(PARAM_INPUT_2_1)->value() + " " + request->getParam(PARAM_INPUT_2_2)->value() + " " + request->getParam(PARAM_INPUT_2_3)->value() + " " + request->getParam(PARAM_INPUT_2_4)->value());
@@ -402,9 +456,10 @@ void setup()
           values += " ";
         }
         //Serial.println(values);
-        if (values != "" && !AgFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
-
+        if (registros2 < 4) {
+          if (values != "" && !AgFS.writeFile(values, &errorMsg))
+            Serial.println(errorMsg);
+        }
         //showFile2();
         values = "";
         Agendamento();
@@ -426,14 +481,15 @@ void setup()
           values += " ";
         }
         //Serial.println(values);
-        if (values != "" && !AgFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
-
+        if (registros2 < 4) {
+          if (values != "" && !AgFS.writeFile(values, &errorMsg))
+            Serial.println(errorMsg);
+        }
         //showFile2();
         values = "";
         Agendamento();
         if (request->getParam(PARAM_INPUT_2_5)->value() != "") {
-          //Serial2.println(request->getParam(PARAM_INPUT_2_5)->value());
+          //Serial.println(request->getParam(PARAM_INPUT_2_5)->value());
           String horarioag = request->getParam(PARAM_INPUT_2_5)->value();
           String ano = (horarioag.substring(0, 4));
           String mes = (horarioag.substring(5, 7));
@@ -448,92 +504,207 @@ void setup()
             values += " ";
           }
           //Serial.println(values);
-          if (values != "" && !AgFS.writeFile(values, &errorMsg))
-            Serial.println(errorMsg);
-
+          if (registros2 < 4) {
+            if (values != "" && !AgFS.writeFile(values, &errorMsg))
+              Serial.println(errorMsg);
+          }
           //showFile2();
           values = "";
           Agendamento();
         }
       }
-      request->send(SPIFFS, "/agenda.html", String(), false, processor);
+      request->send(SPIFFS, "/agendaH.html", String(), false, processor);
     }
+    if (request->hasParam(PARAM_INPUT_3_1)) {
+      if (request->getParam(PARAM_INPUT_3_1)->value() == "1") {
+        String angW = request->getParam(PARAM_INPUT_3_3)->value();
+        String acaoPOS;
+        acaoPOS = "002";
+        Serial.println(acaoPOS + "-" + angW);
+        values = String(acaoPOS + "-" + angW);
+
+        while (values.length() < 10) {
+          values += " ";
+        }
+        //Serial.println(values);
+        if (values != "" && !PosFS.writeFile(values, &errorMsg))
+          Serial.println(errorMsg);
+
+        //showFile2();
+        values = "";
+        RETflag = 1;
+        AgendaPOS();
+
+      }
+      if (request->getParam(PARAM_INPUT_3_1)->value() == "2") {
+        String angW = request->getParam(PARAM_INPUT_3_3)->value();
+        String acaoPOS;
+        acaoPOS = "RET";
+        //Serial.println(acaoPOS + "-" + angW);
+        values = String(acaoPOS + "-" + angW);
+
+        while (values.length() < 10) {
+          values += " ";
+        }
+        //Serial.println(values);
+        if (values != "" && !PosFS.writeFile(values, &errorMsg))
+          Serial.println(errorMsg);
+
+        //showFile2();
+        values = "";
+        angW = request->getParam(PARAM_INPUT_3_4)->value();
+        //Serial.println("RET-" + angW);
+        values = String("002-" + angW);
+
+        while (values.length() < 10) {
+          values += " ";
+        }
+        //Serial.println(values);
+        if (values != "" && !PosFS.writeFile(values, &errorMsg))
+          Serial.println(errorMsg);
+
+        //showFile2();
+        values = "";
+        AgendaPOS();
+      }
+      request->send(SPIFFS, "/AgendaP.html", String(), false, processor);
+    }
+
+    if (request->hasParam(PARAM_INPUT_0)) {
+      if (request->getParam(PARAM_INPUT_0)->value() == "1") {
+        INWEB[2] = '1';
+
+        if (request->hasParam(PARAM_INPUT_0_2)) {
+          if (request->getParam(PARAM_INPUT_0_2)->value() == "3") {
+            INWEB[0] = '3';
+          }
+          if (request->getParam(PARAM_INPUT_0_2)->value() == "4") {
+            INWEB[0] = '4';
+          }
+        }
+        if (request->hasParam(PARAM_INPUT_0_3)) {
+          if (request->getParam(PARAM_INPUT_0_3)->value() == "5") {
+            INWEB[1] = '5';
+          }
+          if (request->getParam(PARAM_INPUT_0_3)->value() == "6") {
+            INWEB[1] = '6';
+          }
+           
+        }
+        if (request->hasParam(PARAM_INPUT_1)) {
+          inputMessage = request->getParam(PARAM_INPUT_1)->value();
+          if (percs != inputMessage) {
+            percs = inputMessage;
+            numw = percs.toInt();
+          }
+        }
+        Serial.print(INWEB);
+        Serial.println(inputMessage);
+        webflag = 1;
+      } else {
+        if (request->getParam(PARAM_INPUT_0)->value() == "2") {
+          INWEB[0] = '0';
+          INWEB[1] = '0';
+          INWEB[2] = '2';
+          inputMessage = "000";
+
+          Serial.print(INWEB);
+          Serial.println(inputMessage);
+          webflag = 1;
+        }
+      }
+      request->send(SPIFFS, "/index.html", String(), false, processor);
+    }
+
+
+
+
   });
   server.on("/agen", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/agenda.html", String(), false, processor);
+    request->send(SPIFFS, "/agendaH.html", String(), false, processor);
   });
   server.on("/xama", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", String(String(EstadoAtual[0]) + "-" +  String(EstadoAtual[1]) + "-" + String(EstadoAtual[2]) + "-" + String(perc) + "-" + String(angulo.toInt())));
   });
+  server.on("/agendaP", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/AgendaP.html", String(), false, processor);
+  });
+  server.on("/agendaH", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/agendaH.html", String(), false, processor);
+  });
   server.on("/clearag", HTTP_GET, [](AsyncWebServerRequest * request) {
     AgFS.destroyFile();
-    for(int i=0; i<10;i++){
-    horaag[i]=0;
-    atuaag[i]=" ";
+    PosFS.destroyFile();
+    for (int i = 0; i < 4; i++) {
+      horaag[i] = 0;
+      atuaag[i] = " ";
     }
-    Serial2.println("Delete ag OK");
-    request->send(SPIFFS, "/agenda.html", String(), false, processor);
+    Serial.println("Delete ag OK");
+    request->send(SPIFFS, "/agendaH.html", String(), false, processor);
   });
 
-  // Avanço
 
-  server.on("/av", HTTP_GET, [](AsyncWebServerRequest * request) {
-    INWEB[0] = '3';
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
 
-  // Reverso
 
-  server.on("/rev", HTTP_GET, [](AsyncWebServerRequest * request) {
-    INWEB[0] = '4';
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
-
-  // Seco
-
-  server.on("/seco", HTTP_GET, [](AsyncWebServerRequest * request) {
-    INWEB[1] = '5';
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
-  // Molhado
-
-  server.on("/molhado", HTTP_GET, [](AsyncWebServerRequest * request) {
-    INWEB[1] = '6';
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
-  // Confirma
-
-  server.on("/confirma", HTTP_GET, [](AsyncWebServerRequest * request) {
-
-    if (INWEB[0] == '3' || INWEB[0] == '4') {
-      INWEB[2] = '1';
-    } else {
-      INWEB[2] = '2';
-    }
-    Serial.print(INWEB);
-    Serial.println(inputMessage);
-    if (percs != inputMessage) {
-      percs = inputMessage;
-      numw = percs.toInt();
-    }
-    webflag = 1;
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
+  //  // Avanço
+  //
+  //  server.on("/av", HTTP_GET, [](AsyncWebServerRequest * request) {
+  //    INWEB[0] = '3';
+  //    request->send(SPIFFS, "/index.html", String(), false, processor);
+  //  });
+  //
+  //  // Reverso
+  //
+  //  server.on("/rev", HTTP_GET, [](AsyncWebServerRequest * request) {
+  //    INWEB[0] = '4';
+  //    request->send(SPIFFS, "/index.html", String(), false, processor);
+  //  });
+  //
+  //  // Seco
+  //
+  //  server.on("/seco", HTTP_GET, [](AsyncWebServerRequest * request) {
+  //    INWEB[1] = '5';
+  //    request->send(SPIFFS, "/index.html", String(), false, processor);
+  //  });
+  //  // Molhado
+  //
+  //  server.on("/molhado", HTTP_GET, [](AsyncWebServerRequest * request) {
+  //    INWEB[1] = '6';
+  //    request->send(SPIFFS, "/index.html", String(), false, processor);
+  //  });
+  //  // Confirma
+  //
+  //  server.on("/confirma", HTTP_GET, [](AsyncWebServerRequest * request) {
+  //
+  //    if (INWEB[0] == '3' || INWEB[0] == '4') {
+  //      INWEB[2] = '1';
+  //    } else {
+  //      INWEB[2] = '2';
+  //    }
+  //    Serial.print(INWEB);
+  //    Serial.println(inputMessage);
+  //    if (percs != inputMessage) {
+  //      percs = inputMessage;
+  //      numw = percs.toInt();
+  //    }
+  //    webflag = 1;
+  //    request->send(SPIFFS, "/index.html", String(), false, processor);
+  //  });
 
   // Desliga
 
-  server.on("/desliga", HTTP_GET, [](AsyncWebServerRequest * request) {
-     
-    INWEB[0] = '0';
-    INWEB[1] = '0';
-    INWEB[2] = '2';
-    inputMessage = "000";
-
-    //Serial.print(INWEB);
-    // Serial.println(inputMessage);
-    webflag = 1;
-    request->send(SPIFFS, "/index.html", String(), false, processor);
-  });
+//  server.on("/desliga", HTTP_GET, [](AsyncWebServerRequest * request) {
+//
+//    INWEB[0] = '0';
+//    INWEB[1] = '0';
+//    INWEB[2] = '2';
+//    inputMessage = "000";
+//
+//    //Serial.print(INWEB);
+//    // Serial.println(inputMessage);
+//    webflag = 1;
+//    request->send(SPIFFS, "/index.html", String(), false, processor);
+//  });
 
   // Start server
   events.onConnect([](AsyncEventSourceClient * client) {
@@ -574,7 +745,9 @@ void showAvailableSpace()
 
 void loop()
 {
-  timerWrite(timer, 0); 
+  tatual = millis();
+  //epoch = epoch+(endloop/10);
+  timerWrite(timer, 0);
   ArduinoOTA.handle();
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
@@ -602,17 +775,18 @@ void loop()
   }
 
 
-  display.clear();
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setFont(ArialMT_Plain_10);
-  String disprssi = String("RSSI = " + String(rssi));
-  //Serial.println(disprssi);
-  display.drawString(0, 16, disprssi);
-  display.drawString(0 , 0, sentido + " " + seco + " " + ligado);
-  display.drawString(0, 32, hora);
-  display.drawString(0, 54, String(epoch));
-  display.drawString(80, 54, "Soil Tech");
-  display.display();
+
+  //  display.clear();
+  //  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  //  display.setFont(ArialMT_Plain_10);
+  //  String disprssi = String("RSSI = " + String(rssi));
+  //  //Serial.println(disprssi);
+  //  display.drawString(0, 16, disprssi);
+  //  display.drawString(0 , 0, sentido + " " + seco + " " + ligado);
+  //  display.drawString(0, 32, hora);
+  //  display.drawString(0, 54, String(epoch));
+  //  display.drawString(80, 54, "Soil Tech");
+  //  display.display();
 
   // Se não houver memória disponível, exibe e reinicia o ESP
   //  if (!ObjFS.availableSpace())
@@ -621,11 +795,12 @@ void loop()
   //    delay(10000);
   //    return;
   //  }
-  tatual = millis();
 
-  if (Serial2.available() > 0 || webflag == 1) { //se o Serial receber uma mensagem de 6 caracteres ou receber uma msg do WebServer
+
+  if ( Serial.available() > 0 || webflag == 1) { //se o Serial. receber uma mensagem de 6 caracteres ou receber uma msg do WebServer
     //Serial.println("OK1");
-    int buffersize = Serial2.available();
+    //Serial.println(Serial.available());
+    int buffersize =  Serial.available();
     Leitura(buffersize);
     if (buffersize == 6 || webflag == 1) {
       //Serial.println("OK2");
@@ -633,12 +808,19 @@ void loop()
       if (stats[0] == '0' && stats[1] == '0' && stats[2] == '0') {
         LeEntrada();
         EnviaStatus();
+        for (int i = 0; i <= buffersize; i++) {
+          stats[i] = ' ';
+        }
       }
 
       if ( stats[0] != '0' || stats[1] != '0' || stats[2] != '0') {
         EnviaEstado();
         LeEntrada();
         EnviaStatus();
+        Serial.println("TOP");
+        for (int i = 0; i <= buffersize; i++) {
+          stats[i] = ' ';
+        }
       }
       webflag = 0;
       return;
@@ -648,21 +830,41 @@ void loop()
         LeEntrada();
         EnviaStatus();
       }
+      if (stats[0] == '0' && stats[1] == '0' && stats[2] == '2') {
+        digitalWrite(DESLIGA, LOW);
+        digitalWrite(RAUX, HIGH);
+        digitalWrite(LIGA, HIGH);
+        digitalWrite(AVANCO, HIGH);
+        digitalWrite(REVERSO, HIGH);
+        digitalWrite(MOLHADO, HIGH);
+        digitalWrite(RAUXP, HIGH);
+        digitalWrite(PERCAT, HIGH);
+        delay(4000);
+        epoch = epoch + 4;
+        digitalWrite(DESLIGA, HIGH);
+        perc = 0;
+        auxP = 0;
+        num = 0;
+        numw = 0;
+        aux2 = 0;
+        LeEntrada();
+        EnviaStatus();
+      }
       if (stats[0] == 'R' && stats[1] == 'S' && stats[2] == 'T') {
-        Serial2.println("Reiniciando");
+        Serial.println("Reiniciando");
         delay(500);
         ESP.restart();
       }
       if (stats[0] == 'D' && stats[1] == 'E' && stats[2] == 'L') {
         ObjFS.destroyFile();
-        Serial2.println("Delete OK");
+        Serial.println("Delete OK");
         id = 0;
         return;
       }
       if (stats[0] == 'S' && stats[1] == 'F') {
         showFile();
-        Serial2.print("Numero de Registros: ");
-        Serial2.println(registros);
+        Serial.print("Numero de Registros: ");
+        Serial.println(registros);
         showAvailableSpace();
         return;
       }
@@ -674,22 +876,22 @@ void loop()
         //        Serial.println((busca + 1));
         for (int i = (busca); i < id; i++) {
           int busca = statss.toInt() - 1;
-          //          Serial2.print("Buscando Registro ");
-          //          Serial2.println((i + 1));
+          //          Serial.print("Buscando Registro ");
+          //          Serial.println((i + 1));
           String reg = ObjFS.findRecord(i);
-          Serial2.println(reg);
+          Serial.println(reg);
         }
         return;
       }
       if (stats[0] == 'S' && stats[1] == 'T' && stats[2] == 'R') {
-        Serial2.println("teste str");
-        Serial2.println(dados);
+        Serial.println("teste str");
+        Serial.println(dados);
         return;
       }
       if (stats[0] == 'L' && stats[1] == 'S' && stats[2] == 'T') {
-        Serial2.println("teste LST");
+        Serial.println("teste LST");
         String reg = ObjFS.findRecord(id - 1);
-        Serial2.println(reg);
+        Serial.println(reg);
         return;
       }
       if (stats[0] == 'D' && stats[1] == 'I' && stats[2] == 'R') {
@@ -718,14 +920,22 @@ void loop()
       }
       if (stats[0] == 'S' && stats[1] == 'A') {
         showFile2();
-        Serial2.print("Numero de Registros: ");
-        Serial2.println(registros2);
+        Serial.print("Numero de Registros: ");
+        Serial.println(registros2);
+        showAvailableSpace();
+        return;
+      }
+      if (stats[0] == 'S' && stats[1] == 'P') {
+        showFile3();
+        Serial.print("Numero de Registros: ");
+        Serial.println(registros3);
         showAvailableSpace();
         return;
       }
       if (stats[0] == 'A' && stats[1] == 'D' && stats[2] == 'E' && stats[3] == 'L') {
         AgFS.destroyFile();
-        Serial2.println("Delete ag OK");
+        PosFS.destroyFile();
+        Serial.println("Delete ag OK");
         //id = 0;
         return;
       }
@@ -741,30 +951,11 @@ void loop()
     }
 
   } else {
-    Serial2.read();
-    delay(5);
+    Serial.read();
+    delay(10);
   }
-  if (digitalRead(AVREAL) == LOW && digitalRead(RTREAL) == LOW) {
-    cont++;
-    delay(100);
-    if (cont > 50) {
-      digitalWrite(LIGA, HIGH);
-      digitalWrite(DESLIGA, HIGH);
-      digitalWrite(AVANCO, HIGH);
-      digitalWrite(REVERSO, HIGH);
-      digitalWrite(MOLHADO, HIGH);
-      digitalWrite(RAUX, HIGH);
-      digitalWrite(RAUXP, HIGH);
-      digitalWrite(PERCAT, HIGH);
-      cont = 0;
-      perc = 0;
-      auxP = 0;
-      num = 0;
-      aux2 = 0;
-    }
-  } else {
-    cont = 0;
-  }
+
+
 
 
   if ((millis() - lastTime) > timerDelay) {
@@ -774,13 +965,17 @@ void loop()
     events.send(String(seco).c_str(), "seco", millis());
     events.send(String(ligado).c_str(), "ligado", millis());
     events.send(String(STRperc).c_str(), "STRperc", millis());
-    events.send(String(hora).c_str(), "hora", millis());
+    //events.send(String(hora).c_str(), "hora", millis());
     events.send(String(angulo.toInt()).c_str(), "angulo", millis());
-    //events.send(String(rssi).c_str(), "rssi", millis());
+    events.send(String(rssi).c_str(), "rssi", millis());
     lastTime = millis();
+    epoch = epoch + 1;
+    //Serial.println(epoch);
   }
+  endloop = millis() - tatual;
   Percentimetro();
   AtuaPercentimetro();
   AtuaAg();
-  
+  AtuaPOS();
+
 }

@@ -9,37 +9,40 @@
 </head>
 
 <body>
-  <h1>Pivo 1</h1>
-  <p><span class="reading"><span id="hora">%HORA%</span></span></p>
+  <h1>Pivo 4</h1>
   <p>Estado Atual: <span class="reading"><span id="sent">%SENTIDO%</span></span> <span class="reading"><span
         id="ag">%SECO%</span></span> <span class="reading"><span id="liga">%LIGADO%</span></span>
   <p>Percentimetro: <span class="reading"><span id="perc">%PERC%</span>&#37;</span></p>
   <p>Posicao: <span class="reading"><span id="angulo">%ANG%</span>&deg;</span></p>
   <div id="idgrafico" class="" style=--radius:%ANG%></div>
 
-  Sentido:
-  <p><a href="/av"><button class="button">Avanco</button></a>
-    <a href="/rev"><button class="button button2">Reverso</button></a>
-  </p>
-  Agua:
-  <p><a href="/seco"><button class="button button3">Seco</button></a>
-    <a href="/molhado"><button class="button button4">Molhado</button></a>
-  </p>
   <form action="/get">
-    Percentimetro <input type="number" step="1" min="0" max="100" name="percentimetro" value="%PERCENTIMETRO%"
-      onchange="submit()"><br>
-  </form>
-  <p><a href="/desliga"><button class="button button6">Desliga</button></a></p>
-  <p><a href="/confirma"><button class="button button5">Confirma</button></a></p>
+    Ligar: <input type="radio" name="Estado" value="1"> Desligar: <input type="radio" name="Estado" value="2"> <br>
+    <br>
+    Sentido : <br>
+    
+    Avanco: <input type="radio" name="sentido" value="3"> Reverso: <input type="radio" name="sentido" value="4"><br>
+    <br>
+    Agua: <br>
+    
+    Seco: <input type="radio" name="seco" value="5"> Molhado: <input type="radio" name="seco" value="6"><br>
+    <br>
+    
+    Percentimetro <input type="number" step="1" min="0" max="100" name="percentimetro" value="%PERCENTIMETRO%"><br>
+    <input type="submit" value="Confirmar" class="button button">
+  </form><br>
+  
+  
   <a href="/agen"><button class="button buttonag">Agendamento</button></a>
   <hr color="gray">
+  <!--
   <div>
     <img src="logo_irrigabras.png" alt="logo_irrigabras" width=500% height=100%>
   </div><br>
-
+-->
   <div id='Powered'>
-    Powered by:
-    <img class="logosoil" src="logo_soil.png" alt="thsetser" width=120 height=120>
+   
+    <img class="logosoil" src="logo_soil.png" alt="thsetser" width=136 height=120>
 
   </div>
   <script>

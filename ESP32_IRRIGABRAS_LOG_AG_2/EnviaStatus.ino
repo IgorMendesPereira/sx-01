@@ -1,17 +1,17 @@
 void EnviaStatus() {
 
-  Serial2.print(EstadoAtual[0]);
-  Serial2.print("-");
-  Serial2.print(EstadoAtual[1]);
-  Serial2.print("-");
-  Serial2.print(EstadoAtual[2]);
-  Serial2.print("-");
-  Serial2.print(perc);
-  Serial2.print("-");
+  Serial.print(EstadoAtual[0]);
+  Serial.print("-");
+  Serial.print(EstadoAtual[1]);
+  Serial.print("-");
+  Serial.print(EstadoAtual[2]);
+  Serial.print("-");
+  Serial.print(perc);
+  Serial.print("-");
   int anguloint = angulo.toInt();
-  Serial2.print(anguloint);
-  Serial2.print("-");
-  Serial2.print(epoch);
+  Serial.print(anguloint);
+  Serial.print("-");
+  Serial.print(epoch);
 
   EstadoAtual[0] = '0';
   EstadoAtual[1] = '0';

@@ -12,3 +12,28 @@ html {
   p{
     font-size: 1.5rem;
   }
+
+  .button {
+    display: inline-block;
+    background-color: rgb(77, 148, 77);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .volta {
+    background-color: rgb(77, 148, 77);
+  }
+  .clearag { 
+    display: inline-block;
+    background-color: #f44336;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .butao {
+    background-image:url("/reload.png");
+    }

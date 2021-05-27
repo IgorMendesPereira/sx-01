@@ -1,0 +1,45 @@
+<!DOCTYPE HTML><html>
+    <head>
+    <title>Agendamento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    </head>
+    <body>
+    <h1>    
+     Agendamento  
+    </h1>
+    <!--
+    <label for="tipo">Tipo de Agendamento: </label>
+    <a href="/agendaP"><button class="button Horario">Posicao</button></a>
+    <a href="/agendaH"><button class="button Posicao">Horario</button></a>
+-->
+
+<p></p>
+ 
+    <form action="/get">
+      Ligar: <input type="radio" name="Estado1" value="1"> Desligar: <input type="radio" name="Estado1" value="2"> <br>
+      <br>
+      Sentido : <br>
+      
+      Avanco: <input type="radio" name="sentido1" value="3"> Reverso: <input type="radio" name="sentido1" value="4"><br>
+      <br>
+      Agua: <br>
+      
+      Seco: <input type="radio" name="seco1" value="5"> Molhado: <input type="radio" name="seco1" value="6"><br>
+      <br>
+      Horario: <input type="datetime-local" id="horario1" name="horario1"> - <input type="datetime-local" id="horario2" name="horario2">
+      <input type="submit" value="Confirmar" class="button button">
+    </form><br>
+
+    <h1>  
+    Agendamentos Programados<a href="/agen"><img src="/reload.png" width="50" height="40"/></a>
+    </h1>
+   <p><span class="reading"><span id="agenda1">%AGENDA1%</span></span></p> 
+   <p><span class="reading"><span id="agenda2">%AGENDA2%</span></span></p>
+   <p><span class="reading"><span id="agenda3">%AGENDA3%</span></span></p> 
+   <p><span class="reading"><span id="agenda4">%AGENDA4%</span></span></p>  
+    <a href="/clearag"><button class="clearag">Cancelar Agendamentos</button></a>
+    <a href="/"><button class="button volta">Voltar</button></a>
+
+  </body>
+  </html>

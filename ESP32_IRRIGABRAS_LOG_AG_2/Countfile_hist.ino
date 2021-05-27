@@ -3,7 +3,7 @@ void countFile() {
   int count = 0;
   String linha = "";
   registros = 0;
-  // Exibe na serial e no display o início do arquivo
+  // Exibe na Serial. e no display o início do arquivo
   //Serial.println("# Begin of file #");
   errorMsg = "";
 
@@ -19,13 +19,13 @@ void countFile() {
 
   }
 
-  // Se existir mensagem de erro exibe na serial e no display
+  // Se existir mensagem de erro exibe na Serial. e no display
   if (errorMsg != "")
   {
     Serial.println(errorMsg);
   }
 
-  // Exibe na serial e no display o fim do arquivo
+  // Exibe na Serial. e no display o fim do arquivo
   //Serial.println("# End of file #");
   registros = count;
 }
