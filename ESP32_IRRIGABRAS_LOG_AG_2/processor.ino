@@ -152,7 +152,14 @@ String processor(const String& var) {
   }
 
   if (var == "CONTATOR") {
-    return readFile(SPIFFS, "/contator.txt");
+    return TIPO;
   }
+  if (var == "DELAY") {
+    return String(espera/1000);
+  }
+  if (var == "NOME") {
+    return nome;
+  }
+  
   return String();
 }

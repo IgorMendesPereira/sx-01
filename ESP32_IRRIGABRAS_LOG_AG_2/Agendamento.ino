@@ -42,8 +42,8 @@ void AtuaAg() {
         digitalWrite(AVANCO, LOW);
         digitalWrite(REVERSO, HIGH);
         digitalWrite(MOLHADO, HIGH);
-        delay(4000);
-        epoch = epoch + 4;
+        delay(espera);
+        epoch = epoch + espera/1000;
         digitalWrite(LIGA, HIGH);
 
 
@@ -54,8 +54,8 @@ void AtuaAg() {
         digitalWrite(REVERSO, LOW);
         digitalWrite(AVANCO, HIGH);
         digitalWrite(MOLHADO, HIGH);
-        delay(4000);
-        epoch = epoch + 4;
+        delay(espera);
+        epoch = epoch + espera/1000;
         digitalWrite(LIGA, HIGH);
       }
       if (atuaag[i] == "361") {
@@ -63,8 +63,8 @@ void AtuaAg() {
         digitalWrite(AVANCO, LOW);
         digitalWrite(REVERSO, HIGH);
         digitalWrite(MOLHADO, LOW);
-        delay(4000);
-        epoch = epoch + 4;
+        delay(espera);
+        epoch = epoch + espera/1000;
         digitalWrite(LIGA, HIGH);
       }
       if (atuaag[i] == "461") {
@@ -73,8 +73,8 @@ void AtuaAg() {
         digitalWrite(REVERSO, LOW);
         digitalWrite(AVANCO, HIGH);
         digitalWrite(MOLHADO, LOW);
-        delay(4000);
-        epoch = epoch + 4;
+        delay(espera);
+        epoch = epoch + espera/1000;
         digitalWrite(LIGA, HIGH);
       }
       if (atuaag[i] == "002") {
@@ -86,8 +86,8 @@ void AtuaAg() {
         digitalWrite(MOLHADO, HIGH);
         digitalWrite(RAUXP, HIGH);
         digitalWrite(PERCAT, HIGH);
-        delay(4000);
-        epoch = epoch + 4;
+        delay(espera);
+        epoch = epoch + espera/1000;
         digitalWrite(DESLIGA, HIGH);
         perc = 0;
         auxP = 0;
@@ -151,8 +151,8 @@ void AtuaPOS() {
         digitalWrite(MOLHADO, HIGH);
         digitalWrite(RAUXP, HIGH);
         digitalWrite(PERCAT, HIGH);
-        delay(4000);
-        epoch = epoch + 4;
+        delay(espera);
+        epoch = epoch +espera/1000;
         digitalWrite(DESLIGA, HIGH);
         perc = 0;
         auxP = 0;
@@ -178,8 +178,8 @@ void AtuaPOS() {
         digitalWrite(MOLHADO, HIGH);
         digitalWrite(RAUXP, HIGH);
         digitalWrite(PERCAT, HIGH);
-        delay(4000);
-        epoch = epoch + 4;
+        delay(espera);
+        epoch = epoch + espera/1000;
         digitalWrite(DESLIGA, HIGH);
         perc = 0;
         auxP = 0;
@@ -192,8 +192,8 @@ void AtuaPOS() {
           digitalWrite(AVANCO, LOW);
           digitalWrite(REVERSO, HIGH);
           digitalWrite(MOLHADO, HIGH);
-          delay(4000);
-          epoch = epoch + 4;
+          delay(espera);
+          epoch = epoch + espera/1000;
           digitalWrite(LIGA, HIGH);
         }
         if (EstadoAtual[0] == '3') {
@@ -202,8 +202,8 @@ void AtuaPOS() {
           digitalWrite(REVERSO, LOW);
           digitalWrite(AVANCO, HIGH);
           digitalWrite(MOLHADO, HIGH);
-          delay(4000);
-          epoch = epoch + 4;
+          delay(espera);
+          epoch = epoch + espera/1000;
           digitalWrite(LIGA, HIGH);
         }
 

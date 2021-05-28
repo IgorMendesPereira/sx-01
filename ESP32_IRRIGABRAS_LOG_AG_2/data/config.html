@@ -20,6 +20,14 @@
     <label for="NA">NF</label>
     <input type="submit" value="Submit" onclick="submitMessage()">
     </form><br>
+    <form action="/get" target="hidden-form">
+      Delay liga/desliga : <input type="number" name="inputDelay" value="%DELAY%">
+      <input type="submit" value="Submit" onclick="submitMessage()">
+      </form><br>
+      <form action="/get" target="hidden-form">
+        Nome do Pivo : <input type="text" name="inputNome" value="%NOME%">
+        <input type="submit" value="Submit" onclick="submitMessage()">
+        </form><br>
   <iframe style="display:none" name="hidden-form"></iframe>
 </body>
 </html>

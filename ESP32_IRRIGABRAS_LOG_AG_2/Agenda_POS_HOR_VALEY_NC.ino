@@ -52,6 +52,7 @@ String LoRaData;
 int rssi;
 
 String TIPO;
+String nome;
 
 int PROGMEM horaag[4];
 String PROGMEM atuaag[4];
@@ -79,6 +80,8 @@ const char* PARAM_INPUT_3_1 = "Estado2";
 const char* PARAM_INPUT_3_3 = "angulo1";
 const char* PARAM_INPUT_3_4 = "angulo2";
 const char* PARAM_CONTATORA = "inputTipo";
+const char* PARAM_ESPERA = "inputDelay";
+const char* PARAM_NOME = "inputNome";
 String inputMessage = "100";
 
 char INWEB[3];
@@ -89,6 +92,8 @@ int flagmem = 0;
 
 long epoch;
 int endloop;
+int espera;
+int error = 0;
 // Estado apresentado na pagina web
 
 String sentidow;
@@ -258,7 +263,8 @@ void TaskDES( void *pvParameters) {
 void setup()
 {
   Serial.begin(9600);
-  //Serial.begin(115200);
+  
+  
   configureWatchdog();
   //  pinMode(16, OUTPUT); //RST do oled
   //  digitalWrite(16, HIGH);
@@ -361,6 +367,12 @@ void setup()
     contw++;
   }
   TIPO = readFile(SPIFFS, "/contator.txt");
+  espera = readFile(SPIFFS, "/delay.txt").toInt()*1000;
+  nome = readFile(SPIFFS, "/nome.txt");
+  if(error == 1){
+    TIPO = "NF";
+    espera = 4000;
+  }
   Serial.print("ESP32 IP as soft AP: ");
   Serial.println(WiFi.softAPIP());
 
@@ -443,10 +455,19 @@ void setup()
   server.on("/get", HTTP_GET, [] (AsyncWebServerRequest * request) {
     
     if (request->hasParam(PARAM_CONTATORA)) {
-//      Serial.println("mama me olhando");
-//      Serial.println(request->getParam(PARAM_CONTATORA)->value());
       TIPO = request->getParam(PARAM_CONTATORA)->value();
       writeFile(SPIFFS, "/contator.txt", TIPO.c_str());
+    }
+    if (request->hasParam(PARAM_ESPERA)) {
+      
+      String indelay = (request->getParam(PARAM_ESPERA)->value());
+      espera = indelay.toInt()*1000;
+      writeFile(SPIFFS, "/delay.txt", indelay.c_str());
+    }
+    if (request->hasParam(PARAM_NOME)) {
+      
+      nome = request->getParam(PARAM_NOME)->value();
+      writeFile(SPIFFS, "/nome.txt", nome.c_str());
     }
 
     if (request->hasParam(PARAM_INPUT_2_1)) {
@@ -609,7 +630,7 @@ void setup()
             numw = percs.toInt();
           }
         }
-        Serial.print(INWEB);
+        //Serial.print(INWEB);
         //Serial.println(inputMessage);
         webflag = 1;
       } else {
@@ -788,8 +809,8 @@ void loop()
         digitalWrite(MOLHADO, HIGH);
         digitalWrite(RAUXP, HIGH);
         digitalWrite(PERCAT, HIGH);
-        delay(4000);
-        epoch = epoch + 4;
+        delay(espera);
+        epoch = epoch + espera/1000;
         digitalWrite(DESLIGA, HIGH);
         perc = 0;
         auxP = 0;
@@ -934,6 +955,7 @@ String readFile(fs::FS &fs, const char * path) {
   File file = fs.open(path, "r");
   if (!file || file.isDirectory()) {
     Serial.println("- empty file or failed to open file");
+    error = 1;
     return String();
   }
   //Serial.println("- read from file:");
@@ -942,6 +964,7 @@ String readFile(fs::FS &fs, const char * path) {
     fileContent += String((char)file.read());
   }
   file.close();
+  error = 0;
   //Serial.println(fileContent);
   return fileContent;
 }
