@@ -14,7 +14,10 @@
 <body>
   <h1>Configuracoes</h1>
   <form action="/get" target="hidden-form">
-    NA/NF (current value: %CONTATOR%): <input type="text" name="inputTipo">
+    NA/NF (current value: %CONTATOR%): <input type="radio" id="NA" name="inputTipo" value="NA">
+    <label for="NA">NA</label>
+    <input type="radio" name="inputTipo" id="NF" value="NF">
+    <label for="NA">NF</label>
     <input type="submit" value="Submit" onclick="submitMessage()">
     </form><br>
   <iframe style="display:none" name="hidden-form"></iframe>

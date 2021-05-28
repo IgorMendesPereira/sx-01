@@ -360,7 +360,7 @@ void setup()
     Serial.println("Connecting to WiFi..");
     contw++;
   }
-
+  TIPO = readFile(SPIFFS, "/contator.txt");
   Serial.print("ESP32 IP as soft AP: ");
   Serial.println(WiFi.softAPIP());
 
