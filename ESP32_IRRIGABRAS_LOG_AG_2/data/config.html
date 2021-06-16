@@ -28,6 +28,10 @@
         Nome do Pivo : <input type="text" name="inputNome" value="%NOME%">
         <input type="submit" value="Submit" onclick="submitMessage()">
         </form><br>
+        <form action="/get" target="hidden-form">
+          Sync Word : <input type="number" name="inputSW" value="%SW%" min="1" max="255">
+          <input type="submit" value="Submit" onclick="submitMessage()">
+          </form><br>
   <iframe style="display:none" name="hidden-form"></iframe>
 </body>
 </html>

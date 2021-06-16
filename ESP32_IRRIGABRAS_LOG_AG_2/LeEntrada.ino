@@ -33,6 +33,9 @@ void LeEntrada() {
       ligado = "Ligado";
     }
   }
+  
+//---------------------------------------------------------------------------- CONTATORA NA (defaut) -----------------------------------------------------------------------------------------  
+ 
   else {
     if (digitalRead(PRESS) == HIGH) {
       EstadoAtual[1] = '5';
@@ -66,7 +69,6 @@ void LeEntrada() {
     }
   }
   if ((EstadoAnterior[0] != EstadoAtual[0] || EstadoAnterior[1] != EstadoAtual[1] || EstadoAnterior[2] != EstadoAtual[2]) && (flagmem != 0)) {
-    //Serial.println("mudou");
     WriteState();
     flagmem = 0;
   } else {

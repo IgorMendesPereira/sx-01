@@ -1,10 +1,10 @@
+//Conta a quatidade de registros no historico
+
 void countFile() {
   dados = "";
   int count = 0;
   String linha = "";
   registros = 0;
-  // Exibe na Serial. e no display o início do arquivo
-  //Serial.println("# Begin of file #");
   errorMsg = "";
 
   // Posiciona o ponteiro do arquivo no início
@@ -14,18 +14,18 @@ void countFile() {
   while (ObjFS.readFileNextRecord(&linha, &errorMsg) && linha != "")
   {
     dados += linha;
-    //Serial.println(linha);
+    //Serial2.println(linha);
     count++;
 
   }
 
-  // Se existir mensagem de erro exibe na Serial. e no display
+  // Se existir mensagem de erro exibe na Serial2. e no display
   if (errorMsg != "")
   {
-    Serial.println(errorMsg);
+    Serial2.println(errorMsg);
   }
 
-  // Exibe na Serial. e no display o fim do arquivo
-  //Serial.println("# End of file #");
+  // Exibe na Serial2. e no display o fim do arquivo
+  //Serial2.println("# End of file #");
   registros = count;
 }

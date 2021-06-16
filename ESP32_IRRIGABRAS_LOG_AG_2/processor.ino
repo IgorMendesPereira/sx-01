@@ -1,7 +1,15 @@
-// Replaces placeholder with LED state value
+//Função que envia os valores das variaveis para a pagina web
+
+/*sintaxe:
+
+    if (var == "(placeholder da pagina web)" {
+     return (variavel para aparecer na pagina web);
+   }
+
+*/
 
 String processor(const String& var) {
-  //Serial.println(var);
+  //Serial2.println(var);
   if (var == "SENTIDO") {
     if (sentido == "Avanco") {
       sentidow = "Avanco";
@@ -10,29 +18,29 @@ String processor(const String& var) {
     } else {
       sentidow = "";
     }
-    //Serial.print(ledState);
+    //Serial2.print(ledState);
     return sentidow;
   }
-  if (var == "SECO") {
-    if (seco == "Seco") {
-      secow = "Seco";
-    } else if (seco == "Molhado") {
-      secow = "Molhado";
+    if (var == "SECO") {
+      if (seco == "Seco") {
+        secow = "Seco";
+      } else if (seco == "Molhado") {
+        secow = "Molhado";
+      }
+      if (EstadoAtual[2] == '2') {
+        secow = "";
+      }
+  
+      return secow;
     }
-    if (EstadoAtual[2] == '2') {
-      secow = "";
+    if (var == "LIGADO") {
+      if ( EstadoAtual[2] == '2') {
+        ligadow = "Desligado";
+      } else {
+        ligadow = "Ligado";
+      }
+      return ligadow;
     }
-
-    return secow;
-  }
-  if (var == "LIGADO") {
-    if ( EstadoAtual[2] == '2') {
-      ligadow = "Desligado";
-    } else {
-      ligadow = "Ligado";
-    }
-    return ligadow;
-  }
   if (var == "PERCENTIMETRO") {
     return inputMessage;
   }
@@ -124,7 +132,7 @@ String processor(const String& var) {
   }
   if (var == "AGENDA4") {
     String reg4 = AgFS.findRecord(3);
-    if (reg4 == "Seek error"){
+    if (reg4 == "Seek error") {
       String sreg4 = "";
       return sreg4;
     }
@@ -151,15 +159,54 @@ String processor(const String& var) {
 
   }
 
+  if (var == "AGENDAPOS1") {
+    String reg5 = PosFS.findRecord(0);
+    if (reg5 == "Seek error") {
+      String sreg5 = "";
+      return sreg5;
+    }
+    if (reg5.substring(0, 3) == "002") {
+      String sreg5 = String("Desligar - " + reg5.substring(4, reg5.indexOf("\n")));
+      return sreg5;
+    }
+    if (reg5.substring(0, 3) == "RET") {
+      String sreg5 = String("Retornar - " + reg5.substring(4, reg5.indexOf("\n")));
+      return sreg5;
+    }
+
+
+  }
+
+  if (var == "AGENDAPOS2") {
+    String reg6 = PosFS.findRecord(1);
+    if (reg6 == "Seek error") {
+      String sreg6 = "";
+      return sreg6;
+    }
+    if (reg6.substring(0, 3) == "002") {
+      String sreg6 = String("Desligar - " + reg6.substring(4, reg6.indexOf("\n")));
+      return sreg6;
+    }
+    if (reg6.substring(0, 3) == "RET") {
+      String sreg6 = String("Retornar - " + reg6.substring(4, reg6.indexOf("\n")));
+      return sreg6;
+    }
+
+
+  }
+
   if (var == "CONTATOR") {
     return TIPO;
   }
   if (var == "DELAY") {
-    return String(espera/1000);
+    return String(espera / 1000);
   }
   if (var == "NOME") {
     return nome;
   }
-  
+  if (var == "SW") {
+    return String(LoRaAdress);
+  }
+
   return String();
 }

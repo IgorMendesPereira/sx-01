@@ -2,31 +2,31 @@
 #include "ESPAsyncWebServer.h"
 #include "SPIFFS.h"
 #include "ESPmDNS.h"
-#include "WiFiUdp.h"
 #include "ArduinoOTA.h"
 #include <SPI.h>
 #include "LoRa.h"
-#include <Wire.h>  //responsável pela comunicação i2c
-#include "SSD1306.h" //responsável pela comunicação com o display
 #include <Arduino.h>
 #include "FS_File_Record.h"
 #include "FS_File_Record2.h"
 #include "FS_File_Record3.h"
-//#include "logo.h"
+
+//ATUAÇÃO
 
 #define LIGA              3
-#define DESLIGA           1             //RUIM
-#define AVANCO            0           //RUIM
-#define REVERSO           22           //mesmo que 0
-#define MOLHADO           23            //mesmo que 14
-#define RAUX              15       //RUIM
+#define DESLIGA           1
+#define AVANCO            0
+#define REVERSO           22
+#define MOLHADO           23
+#define RAUX              15
 #define RAUXP             2
 #define PERCAT            4
 
-#define AVREAL            36            //16  avanço lido
-#define RTREAL            37              //RETORNO LIDO
-#define PRESS             39             //PRESSOSTATO
-#define PERC              38             //PERCENTIMETRO
+//LEITURA
+
+#define AVREAL            36
+#define RTREAL            37
+#define PRESS             39
+#define PERC              38
 
 //LoRA SPI
 
@@ -40,12 +40,10 @@
 #define BAND 915E6
 
 #define PABOOST true
-//SSD1306 display(0x3c, 4, 15);
 
-//void TaskAtuaAg( void *pvParameters );
-void taskDES( void *pvParameters );
+void taskDES( void *pvParameters ); //DEFINE TASK
 
-hw_timer_t *timer = NULL;
+//hw_timer_t *timer = NULL;
 
 String LoRaData;
 
@@ -55,6 +53,7 @@ String TIPO;
 String nome;
 
 int PROGMEM horaag[4];
+int PROGMEM percag[4];
 String PROGMEM atuaag[4];
 String atuaP[10];
 int pos[10];
@@ -66,6 +65,8 @@ const char* password = "0034731858";
 
 const char* ssidap = "Painel Soil";
 const char* passwordap = "soil2021";
+
+// INPUTS PAGINA WEB
 
 const char* PARAM_INPUT_0 = "Estado";
 const char* PARAM_INPUT_0_2 = "sentido";
@@ -82,7 +83,11 @@ const char* PARAM_INPUT_3_4 = "angulo2";
 const char* PARAM_CONTATORA = "inputTipo";
 const char* PARAM_ESPERA = "inputDelay";
 const char* PARAM_NOME = "inputNome";
+const char* PARAM_SW = "inputSW";
+const char* PARAM_PERC_H = "percentimetroAH";
 String inputMessage = "100";
+
+int LoRaAdress;
 
 char INWEB[3];
 char EstadoAtual[3];
@@ -113,10 +118,11 @@ String percs;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-char stats[15];  // para entrada Serial.
+char stats[15];  // para entrada Serial2.
 
 int auxP = 0;
 int perc = 0;
+int entraperc =0;
 
 int RETflag = 0;
 
@@ -130,7 +136,7 @@ int aux2 = 0;
 
 
 unsigned long lastTime = 0;
-unsigned long timerDelay = 1000;
+unsigned long timerDelay = 5000;
 unsigned long tatual = 0;
 unsigned long t2 = 0;
 unsigned long t3 = 0;
@@ -172,69 +178,63 @@ String errorMsg;
 String lastRecord = "";
 
 
-void IRAM_ATTR resetModule() {
-  ets_printf("(watchdog) reiniciar\n"); //imprime no log
-  esp_restart(); //reinicia o chip
-}
+// Função reset WD
+//void IRAM_ATTR resetModule() {
+//  ets_printf("(watchdog) reiniciar\n"); //imprime no log
+//  esp_restart(); //reinicia o chip
+//}
 
-void configureWatchdog()
-{
-  timer = timerBegin(0, 80, true); //timerID 0, div 80
-  //timer, callback, interrupção de borda
-  timerAttachInterrupt(timer, &resetModule, true);
-  //timer, tempo (us), repetição
-  timerAlarmWrite(timer, 5 * 1000000, true);
-  timerAlarmEnable(timer); //habilita a interrupção //enable interrupt
-}
+//void configureWatchdog()
+//{
+//  timer = timerBegin(0, 80, true); //timerID 0, div 80
+//  //timer, callback, interrupção de borda
+//  timerAttachInterrupt(timer, &resetModule, true);
+//  //timer, tempo (us), repetição
+//  timerAlarmWrite(timer, 5 * 1000000, true);
+//  timerAlarmEnable(timer); //habilita a interrupção //enable interrupt
+//}
 
-// Replaces placeholder with LED state value
 
+//Listagem dos Diretorios
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
-  Serial.printf("Listing directory: %s\n", dirname);
+  Serial2.printf("Listing directory: %s\n", dirname);
 
   File root = fs.open(dirname);
   if (!root) {
-    Serial.println("Failed to open directory");
+    Serial2.println("Failed to open directory");
     return;
   }
   if (!root.isDirectory()) {
-    Serial.println("Not a directory");
+    Serial2.println("Not a directory");
     return;
   }
 
   File file = root.openNextFile();
   while (file) {
     if (file.isDirectory()) {
-      Serial.print("  DIR : ");
-      Serial.println(file.name());
+      Serial2.print("  DIR : ");
+      Serial2.println(file.name());
       if (levels) {
         listDir(fs, file.name(), levels - 1);
       }
     } else {
-      Serial.print("  FILE: ");
-      Serial.print(file.name());
-      Serial.print("  SIZE: ");
-      Serial.println(file.size());
+      Serial2.print("  FILE: ");
+      Serial2.print(file.name());
+      Serial2.print("  SIZE: ");
+      Serial2.println(file.size());
     }
     file = root.openNextFile();
   }
 }
 
-//void TaskAtuaAg( void *pvParameters) {
-//
-//  for (;;) {
-//
-//    delay(10);
-//  }
-//}
+//task para desarmar os reles caso o painel seja desligado manualmente
 
 void TaskDES( void *pvParameters) {
-  //  Serial.print("Task1 running on core ");
-  //  Serial.println(xPortGetCoreID());
+
   for (;;) {
-    timerWrite(timer, 0);
+    // timerWrite(timer, 0); //ALIMENTA WD
     if (digitalRead(AVREAL) == LOW && digitalRead(RTREAL) == LOW) {
-      timerWrite(timer, 0);
+      //      timerWrite(timer, 0);
       cont++;
       delay(100);
       if (cont > 50) {
@@ -251,7 +251,6 @@ void TaskDES( void *pvParameters) {
         auxP = 0;
         num = 0;
         aux2 = 0;
-        //epoch = epoch + 5;
       }
     } else {
       cont = 0;
@@ -262,24 +261,10 @@ void TaskDES( void *pvParameters) {
 
 void setup()
 {
-  Serial.begin(9600);
-  
-  
-  configureWatchdog();
-  //  pinMode(16, OUTPUT); //RST do oled
-  //  digitalWrite(16, HIGH);
-  //  delay(50);
-  //  digitalWrite(16, LOW);    // reseta o OLED
-  //  delay(50);
-  //  digitalWrite(16, HIGH); // enquanto o OLED estiver ligado, GPIO16 deve estar HIGH
-  //  display.init();
-  //  display.flipScreenVertically();
-  //  display.clear();
-  //  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  //  display.drawXbm(0, 0, logo_width, logo_height, logo_bits);
-  //  display.display();
+  Serial2.begin(9600);   //INICIALIZA SERIAL2, PARA ESP32 LORAV2 NUNCA UTILIZAR A SERIAL1
 
-  //Serial.begin(9600);
+  //configureWatchdog();
+
   pinMode(LIGA, OUTPUT);
   pinMode(DESLIGA, OUTPUT);
   pinMode(AVANCO, OUTPUT);
@@ -303,59 +288,62 @@ void setup()
   digitalWrite(RAUXP, HIGH);
   digitalWrite(PERCAT, HIGH);
 
-  // Iniciamos a Serial. com velocidade de 115200
   EstadoAnterior[0] = EstadoAtual[0];
   EstadoAnterior[1] = EstadoAtual[1];
   EstadoAnterior[2] = EstadoAtual[2];
-  // Exibe na Serial. "Starting..." para debug
-  Serial.print("Starting...");
+  // Exibe na Serial2. "Starting..." para debug
+  Serial2.print("Starting...");
 
   // Se não foi possível iniciar o File System, exibimos erro e reiniciamos o ESP
   if (!ObjFS.init())
   {
-    Serial.println("File system error");
+    Serial2.println("File system error");
     delay(1000);
-    ESP.restart();
+    //ESP.restart();
   }
 
   // Exibimos mensagem
-  Serial.println("File system ok");
+  Serial2.println("File system ok");
 
   // Se o arquivo não existe, criamos o arquivo
   if (!ObjFS.fileExists())
   {
-    Serial.println("New file ObjFS");
+    Serial2.println("New file ObjFS");
     ObjFS.newFile(); // Cria o arquivo
   }
 
   if (!AgFS.fileExists())
   {
-    Serial.println("New file AgFS");
+    Serial2.println("New file AgFS");
     AgFS.newFile(); // Cria o arquivo
   }
   if (!PosFS.fileExists())
   {
-    Serial.println("New file PosFS");
+    Serial2.println("New file PosFS");
     PosFS.newFile(); // Cria o arquivo
   }
+
+  //EXECUTA A FUNCAO AGENDAMENTO TODA VEZ QUE INICIA PARA GRAVAR OS VALORES NAS STRINGS DE AGENDAMENTO SALVAS NA FLASH
   Agendamento();
+
   SPI.begin(SCK, MISO, MOSI, SS);
-  //  //setup LoRa transceiver module
+  //setup LoRa transceiver module
   LoRa.setPins(SS, RST, DIO0);
 
+  //INICIALIZA LORA
+
   if (!LoRa.begin(BAND)) {
-    Serial.println("Starting LoRa failed!");
+    Serial2.println("Starting LoRa failed!");
     while (1);
   }
-  LoRa.setSyncWord(0x99);
-  LoRa.setSpreadingFactor(8);
-  // Connect to Wi-Fi
-  //  WiFi.begin(ssid, password);
-  //  while (WiFi.status() != WL_CONNECTED) {
-  //    delay(500);
-  //    Serial.print(".");
-  //  }
-  // Print ESP32 Local IP Address
+
+  //SYNC WORD DEFAUT 0X99, CASO NENHUMA TENHA SIDO SETADA NAS CONFIGURACOES
+
+  //LoRa.setSyncWord(0x99);
+  //LoRa.setSpreadingFactor(8);
+
+  //WIFI em modo hibrido STA para desenvolvimento e AP para campo
+
   WiFi.mode(WIFI_MODE_APSTA);
   WiFi.softAP(ssidap, passwordap);
   WiFi.begin(ssid, password);
@@ -363,21 +351,38 @@ void setup()
   while (WiFi.status() != WL_CONNECTED && contw != 8) {
 
     delay(500);
-    Serial.println("Connecting to WiFi..");
+    Serial2.println("Connecting to WiFi..");
     contw++;
   }
-  TIPO = readFile(SPIFFS, "/contator.txt");
-  espera = readFile(SPIFFS, "/delay.txt").toInt()*1000;
-  nome = readFile(SPIFFS, "/nome.txt");
-  if(error == 1){
-    TIPO = "NF";
-    espera = 4000;
-  }
-  Serial.print("ESP32 IP as soft AP: ");
-  Serial.println(WiFi.softAPIP());
 
-  Serial.print("ESP32 IP on the WiFi network: ");
-  Serial.println(WiFi.localIP());
+  //inicializa as variaveis de configuração salvas na memoria
+
+  TIPO = readFile(SPIFFS, "/contator.txt");
+  espera = readFile(SPIFFS, "/delay.txt").toInt() * 1000;
+  nome = readFile(SPIFFS, "/nome.txt");
+  LoRaAdress = readFile(SPIFFS, "/sw.txt").toInt();
+  //caso não haja nada na memoria será setado o defaut (NA;4s;Pivo 1;sw:0x99)
+  if (error == 1) {
+    TIPO = "NA";
+    writeFile(SPIFFS, "/contator.txt", TIPO.c_str());
+    espera = 4000;
+    String indelay = String(espera / 1000);
+    writeFile(SPIFFS, "/delay.txt", indelay.c_str());
+    nome = "Pivo 1";
+    writeFile(SPIFFS, "/nome.txt", nome.c_str());
+    LoRaAdress = 153;
+    writeFile(SPIFFS, "/sw.txt", String(LoRaAdress).c_str());
+  }
+
+  //LoRa.setSyncWord(syncword.toInt());
+  
+  Serial2.print("ESP32 IP as soft AP: ");
+  Serial2.println(WiFi.softAPIP());
+
+  Serial2.print("ESP32 IP on the WiFi network: ");
+  Serial2.println(WiFi.localIP());
+
+  //CODIGO DE GRAVACAO DE ARQUIVOS VIA OTA
 
   ArduinoOTA
   .onStart([]() {
@@ -387,34 +392,27 @@ void setup()
     else // U_SPIFFS
       type = "filesystem";
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-    Serial.println("Start updating " + type);
+    Serial2.println("Start updating " + type);
   })
   .onEnd([]() {
-    Serial.println("nEnd");
+    Serial2.println("nEnd");
   })
   .onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%r", (progress / (total / 100)));
-    timerWrite(timer, 0);
+    Serial2.printf("Progress: %u%%r", (progress / (total / 100)));
+    // timerWrite(timer, 0);
     //digitalWrite(2, !digitalRead(2));
   })
   .onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    Serial2.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial2.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial2.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial2.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial2.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial2.println("End Failed");
   });
   ArduinoOTA.begin();
 
-  //  xTaskCreatePinnedToCore(
-  //    TaskAtuaAg,
-  //    "AtuaAg",
-  //    10000,  // Stack size
-  //    NULL,
-  //    1, // Priority
-  //    NULL,
-  //    0);
+  //PARAMETRIZACAO DA TASK
 
   xTaskCreatePinnedToCore(
     TaskDES,
@@ -423,7 +421,9 @@ void setup()
     NULL,
     1, // Priority
     NULL,
-    0);
+    0); //CORE 0
+
+  //-------------------------------------------------------------------- WEB SERVER ---------------------------------------------------------------------------------------
 
   server.on( "/", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/index.html", String(), false, processor);
@@ -452,23 +452,38 @@ void setup()
     request->send(SPIFFS, "/reload.png");
   });
 
+
+  //AQUISIÇÃO DOS PARAMETROS NA PAGINA WEB
+
   server.on("/get", HTTP_GET, [] (AsyncWebServerRequest * request) {
-    
+    //------------------------------------------CONFIG------------------------------------------------------------------------
+
     if (request->hasParam(PARAM_CONTATORA)) {
       TIPO = request->getParam(PARAM_CONTATORA)->value();
       writeFile(SPIFFS, "/contator.txt", TIPO.c_str());
     }
     if (request->hasParam(PARAM_ESPERA)) {
-      
+
       String indelay = (request->getParam(PARAM_ESPERA)->value());
-      espera = indelay.toInt()*1000;
+      espera = indelay.toInt() * 1000;
       writeFile(SPIFFS, "/delay.txt", indelay.c_str());
     }
     if (request->hasParam(PARAM_NOME)) {
-      
+
       nome = request->getParam(PARAM_NOME)->value();
       writeFile(SPIFFS, "/nome.txt", nome.c_str());
     }
+    if (request->hasParam(PARAM_SW)) {
+
+      LoRaAdress = (request->getParam(PARAM_SW)->value()).toInt();
+      writeFile(SPIFFS, "/sw.txt", String(LoRaAdress).c_str());
+      //LoRa.setSyncWord(syncword.toInt());
+      Serial2.println(byte(LoRaAdress));
+    }
+    //-----------------------------------------------------------------------------------------------------------------------
+
+
+    //---------------------------------------AGENDAMENTO POR HORARIO---------------------------------------------------------
 
     if (request->hasParam(PARAM_INPUT_2_1)) {
 
@@ -487,41 +502,43 @@ void setup()
         while (values.length() < 30) {
           values += " ";
         }
-        //Serial.println(values);
+
         if (registros2 < 4) {
           if (values != "" && !AgFS.writeFile(values, &errorMsg))
-            Serial.println(errorMsg);
+            Serial2.println(errorMsg);
         }
-        //showFile2();
+
         values = "";
         Agendamento();
 
 
       }
       if (request->getParam(PARAM_INPUT_2_1)->value() == "1") {
+        String perc_a = request->getParam(PARAM_PERC_H)->value();
+        //num = perc_a.toInt();
+        //Serial2.println(num);
         String horarioag = request->getParam(PARAM_INPUT_2_4)->value();
         String ano = (horarioag.substring(0, 4));
         String mes = (horarioag.substring(5, 7));
         String dia = (horarioag.substring(8, 10));
         String hora = (horarioag.substring(11, 16));
         horarioag = String(hora + " - " + dia + "/" + mes + "/" + ano);
-        String Sai = String(request->getParam(PARAM_INPUT_2_2)->value() + request->getParam(PARAM_INPUT_2_3)->value() + request->getParam(PARAM_INPUT_2_1)->value() + "-" + horarioag);
-        Serial.println(Sai);
+        String Sai = String(request->getParam(PARAM_INPUT_2_2)->value() + request->getParam(PARAM_INPUT_2_3)->value() + request->getParam(PARAM_INPUT_2_1)->value() + "/" + perc_a + "-" + horarioag);
+        Serial2.println(Sai);
         values = Sai;
 
         while (values.length() < 30) {
           values += " ";
         }
-        //Serial.println(values);
+
         if (registros2 < 4) {
           if (values != "" && !AgFS.writeFile(values, &errorMsg))
-            Serial.println(errorMsg);
+            Serial2.println(errorMsg);
         }
-        //showFile2();
+
         values = "";
         Agendamento();
         if (request->getParam(PARAM_INPUT_2_5)->value() != "") {
-          //Serial.println(request->getParam(PARAM_INPUT_2_5)->value());
           String horarioag = request->getParam(PARAM_INPUT_2_5)->value();
           String ano = (horarioag.substring(0, 4));
           String mes = (horarioag.substring(5, 7));
@@ -529,16 +546,16 @@ void setup()
           String hora = (horarioag.substring(11, 16));
           horarioag = String(hora + " - " + dia + "/" + mes + "/" + ano);
           String Sai = String("002-" + horarioag);
-          Serial.println(Sai);
+          Serial2.println(Sai);
           values = Sai;
 
           while (values.length() < 30) {
             values += " ";
           }
-          //Serial.println(values);
+          //Serial2.println(values);
           if (registros2 < 4) {
             if (values != "" && !AgFS.writeFile(values, &errorMsg))
-              Serial.println(errorMsg);
+              Serial2.println(errorMsg);
           }
           //showFile2();
           values = "";
@@ -547,22 +564,26 @@ void setup()
       }
       request->send(SPIFFS, "/agendaH.html", String(), false, processor);
     }
+
+    //-----------------------------------------------------------------------------------------------------------------------
+
+    //---------------------------------------AGENDAMENTO POR POSIÇÃO---------------------------------------------------------
+
     if (request->hasParam(PARAM_INPUT_3_1)) {
       if (request->getParam(PARAM_INPUT_3_1)->value() == "1") {
         String angW = request->getParam(PARAM_INPUT_3_3)->value();
         String acaoPOS;
         acaoPOS = "002";
-        Serial.println(acaoPOS + "-" + angW);
+        Serial2.println(acaoPOS + "-" + angW);
         values = String(acaoPOS + "-" + angW);
 
         while (values.length() < 10) {
           values += " ";
         }
-        //Serial.println(values);
-        if (values != "" && !PosFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
 
-        //showFile2();
+        if (values != "" && !PosFS.writeFile(values, &errorMsg))
+          Serial2.println(errorMsg);
+
         values = "";
         RETflag = 1;
         AgendaPOS();
@@ -572,35 +593,36 @@ void setup()
         String angW = request->getParam(PARAM_INPUT_3_3)->value();
         String acaoPOS;
         acaoPOS = "RET";
-        //Serial.println(acaoPOS + "-" + angW);
+
         values = String(acaoPOS + "-" + angW);
 
         while (values.length() < 10) {
           values += " ";
         }
-        //Serial.println(values);
-        if (values != "" && !PosFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
 
-        //showFile2();
+        if (values != "" && !PosFS.writeFile(values, &errorMsg))
+          Serial2.println(errorMsg);
+
         values = "";
         angW = request->getParam(PARAM_INPUT_3_4)->value();
-        //Serial.println("RET-" + angW);
+        //Serial2.println("RET-" + angW);
         values = String("002-" + angW);
 
         while (values.length() < 10) {
           values += " ";
         }
-        //Serial.println(values);
-        if (values != "" && !PosFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
 
-        //showFile2();
+        if (values != "" && !PosFS.writeFile(values, &errorMsg))
+          Serial2.println(errorMsg);
+
         values = "";
         AgendaPOS();
       }
       request->send(SPIFFS, "/AgendaP.html", String(), false, processor);
     }
+    //-----------------------------------------------------------------------------------------------------------------------
+
+    //------------------------------------------------ ATUAÇÃO --------------------------------------------------------------
 
     if (request->hasParam(PARAM_INPUT_0)) {
       if (request->getParam(PARAM_INPUT_0)->value() == "1") {
@@ -621,17 +643,17 @@ void setup()
           if (request->getParam(PARAM_INPUT_0_3)->value() == "6") {
             INWEB[1] = '6';
           }
-           
+
         }
         if (request->hasParam(PARAM_INPUT_1)) {
           inputMessage = request->getParam(PARAM_INPUT_1)->value();
           if (percs != inputMessage) {
             percs = inputMessage;
             numw = percs.toInt();
+            aux2 = 0;
           }
         }
-        //Serial.print(INWEB);
-        //Serial.println(inputMessage);
+
         webflag = 1;
       } else {
         if (request->getParam(PARAM_INPUT_0)->value() == "2") {
@@ -640,8 +662,6 @@ void setup()
           INWEB[2] = '2';
           inputMessage = "000";
 
-          Serial.print(INWEB);
-          //Serial.println(inputMessage);
           webflag = 1;
         }
       }
@@ -652,6 +672,10 @@ void setup()
 
 
   });
+
+  //---------------------------------------BOTOES DE MUDANCA DE PAGINA---------------------------------------------------------
+
+  
   server.on("/agen", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/agenda.html", String(), false, processor);
   });
@@ -664,6 +688,9 @@ void setup()
   server.on("/agendaH", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/agendaH.html", String(), false, processor);
   });
+
+  //BOTAO PARA APAGAR AGENDAMENTOS
+  
   server.on("/clearag", HTTP_GET, [](AsyncWebServerRequest * request) {
     AgFS.destroyFile();
     PosFS.destroyFile();
@@ -671,7 +698,7 @@ void setup()
       horaag[i] = 0;
       atuaag[i] = " ";
     }
-    Serial.println("Delete ag OK");
+    Serial2.println("Delete ag OK");
     request->send(SPIFFS, "/agenda.html", String(), false, processor);
   });
 
@@ -679,7 +706,7 @@ void setup()
   // Start server
   events.onConnect([](AsyncEventSourceClient * client) {
     if (client->lastId()) {
-      Serial.printf("Client reconnected! Last message ID that it got is: %u\n", client->lastId());
+      Serial2.printf("Client reconnected! Last message ID that it got is: %u\n", client->lastId());
     }
     // send event with message "hello!", id current millis
     // and set reconnect delay to 1 second
@@ -688,92 +715,62 @@ void setup()
   server.addHandler(&events);
   server.begin();
 
-  // EXEMPLO DE BUSCA (FIND)
-  // Obs: O primeiro registro se posiciona na pos 0 (zero)
-  // String reg = ObjFS.findRecord(10);
-  // showDisplay(reg);
-
-  // Exibimos o arquivo
-  //showFile();
   countFile();
   String reg = ObjFS.findRecord(registros - 1);
   int idc = reg.indexOf(':');
   String ids = reg.substring(0, idc);
   id = ids.toInt();
-  //Serial.println(horaag[1]);
-  //Serial.println(atuaag);
+
 
 }
 
-// Exibe o espaço total, usado e disponível no display
+// Exibe o espaço total, usado e disponível na memoria
 void showAvailableSpace()
 {
-  Serial.println("Space: " + String(ObjFS.getTotalSpace()) + " Bytes");
-  Serial.println("Used: " + String(ObjFS.getUsedSpace()) + " Bytes");
+  Serial2.println("Space: " + String(ObjFS.getTotalSpace()) + " Bytes");
+  Serial2.println("Used: " + String(ObjFS.getUsedSpace()) + " Bytes");
 
 }
 
 void loop()
 {
   tatual = millis();
-  //epoch = epoch+(endloop/10);
-  timerWrite(timer, 0);
+
+  //timerWrite(timer, 0);
   ArduinoOTA.handle();
+
+  // RECEBE E TRATA O PACOTE LORA
+  
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
 
     while (LoRa.available()) {
+      int LoRaAdressR = LoRa.read();
+      //Serial2.println(LoRaAdressR);
+      if(LoRaAdressR == LoRaAdress){
       LoRaData = LoRa.readString();
       rssi = LoRa.packetRssi();
-      //Serial.println("oi");
-      //Serial.print(rssi);
-      //Serial.print(" SNR: ");
-      //float snr = LoRa.packetSnr();
-      //Serial.println(snr);
       int separa = LoRaData.indexOf('-');
       int fim = LoRaData.indexOf('#');
       if (separa >= 0) {
         angulo = LoRaData.substring(0, separa);
         hora = LoRaData.substring((separa + 1), (fim));
         epoch = (LoRaData.substring((LoRaData.indexOf('#') + 1), LoRaData.indexOf('\n'))).toInt();
-        //Serial.println(epoch);
-
       }
-
-
+      }else{
+        String msgerrada = LoRa.readString();
+        //Serial2.println("MSG ERRADA");
+      }
+      }
     }
-  }
+  
 
 
-
-  //  display.clear();
-  //  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  //  display.setFont(ArialMT_Plain_10);
-  //  String disprssi = String("RSSI = " + String(rssi));
-  //  //Serial.println(disprssi);
-  //  display.drawString(0, 16, disprssi);
-  //  display.drawString(0 , 0, sentido + " " + seco + " " + ligado);
-  //  display.drawString(0, 32, hora);
-  //  display.drawString(0, 54, String(epoch));
-  //  display.drawString(80, 54, "Soil Tech");
-  //  display.display();
-
-  // Se não houver memória disponível, exibe e reinicia o ESP
-  //  if (!ObjFS.availableSpace())
-  //  {
-  //    Serial.println("Memory is full!");
-  //    delay(10000);
-  //    return;
-  //  }
-
-
-  if ( Serial.available() > 0 || webflag == 1) { //se o Serial. receber uma mensagem de 6 caracteres ou receber uma msg do WebServer
-    //Serial.println("OK1");
-    //Serial.println(Serial.available());
-    int buffersize =  Serial.available();
+  if ( Serial2.available() > 0 || webflag == 1) { //se o Serial2. receber uma mensagem de 6 caracteres ou receber uma msg do WebServer
+    int buffersize =  Serial2.available();
+    //Serial2.println("COASda");
     Leitura(buffersize);
     if (buffersize == 6 || webflag == 1) {
-      //Serial.println("OK2");
 
       if (stats[0] == '0' && stats[1] == '0' && stats[2] == '0') {
         LeEntrada();
@@ -787,7 +784,6 @@ void loop()
         EnviaEstado();
         LeEntrada();
         EnviaStatus();
-        //Serial.println("TOP");
         for (int i = 0; i <= buffersize; i++) {
           stats[i] = ' ';
         }
@@ -800,6 +796,9 @@ void loop()
         LeEntrada();
         EnviaStatus();
       }
+
+      //DESLIGA
+      
       if (stats[0] == '0' && stats[1] == '0' && stats[2] == '2') {
         digitalWrite(DESLIGA, LOW);
         digitalWrite(RAUX, HIGH);
@@ -810,7 +809,7 @@ void loop()
         digitalWrite(RAUXP, HIGH);
         digitalWrite(PERCAT, HIGH);
         delay(espera);
-        epoch = epoch + espera/1000;
+        epoch = epoch + espera / 1000;
         digitalWrite(DESLIGA, HIGH);
         perc = 0;
         auxP = 0;
@@ -820,21 +819,23 @@ void loop()
         LeEntrada();
         EnviaStatus();
       }
+
+      
       if (stats[0] == 'R' && stats[1] == 'S' && stats[2] == 'T') {
-        Serial.println("Reiniciando");
+        Serial2.println("Reiniciando");
         delay(500);
         ESP.restart();
       }
       if (stats[0] == 'D' && stats[1] == 'E' && stats[2] == 'L') {
         ObjFS.destroyFile();
-        Serial.println("Delete OK");
+        Serial2.println("Delete OK");
         id = 0;
         return;
       }
       if (stats[0] == 'S' && stats[1] == 'F') {
         showFile();
-        Serial.print("Numero de Registros: ");
-        Serial.println(registros);
+        Serial2.print("Numero de Registros: ");
+        Serial2.println(registros);
         showAvailableSpace();
         return;
       }
@@ -842,26 +843,22 @@ void loop()
         String statss = String(stats);
         statss = statss.substring((statss.indexOf('N') + 1), statss.indexOf('#'));
         int busca = statss.toInt() - 1;
-        //        Serial.print("Buscando Registro ");
-        //        Serial.println((busca + 1));
         for (int i = (busca); i < id; i++) {
           int busca = statss.toInt() - 1;
-          //          Serial.print("Buscando Registro ");
-          //          Serial.println((i + 1));
           String reg = ObjFS.findRecord(i);
-          Serial.println(reg);
+          Serial2.println(reg);
         }
         return;
       }
       if (stats[0] == 'S' && stats[1] == 'T' && stats[2] == 'R') {
-        Serial.println("teste str");
-        Serial.println(dados);
+        Serial2.println("teste str");
+        Serial2.println(dados);
         return;
       }
       if (stats[0] == 'L' && stats[1] == 'S' && stats[2] == 'T') {
-        Serial.println("teste LST");
+        Serial2.println("teste LST");
         String reg = ObjFS.findRecord(id - 1);
-        Serial.println(reg);
+        Serial2.println(reg);
         return;
       }
       if (stats[0] == 'D' && stats[1] == 'I' && stats[2] == 'R') {
@@ -872,75 +869,76 @@ void loop()
       //******************************************************************agendamento*****************************************************************************************
 
       if (stats[0] == 'A' && stats[1] == 'G') {
-        Serial.print(String(stats));
+        Serial2.print(String(stats));
         values = String(stats).substring((String(stats).indexOf('>') + 1), (String(stats).indexOf('#')));
 
         while (values.length() < 30) {
           values += " ";
         }
-        //Serial.println(values);
+        //Serial2.println(values);
         if (values != "" && !AgFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
-
-        //showFile2();
+          Serial2.println(errorMsg);
         values = "";
         Agendamento();
 
-        //return;
       }
       if (stats[0] == 'S' && stats[1] == 'A') {
         showFile2();
-        Serial.print("Numero de Registros: ");
-        Serial.println(registros2);
+        Serial2.print("Numero de Registros: ");
+        Serial2.println(registros2);
         showAvailableSpace();
         return;
       }
       if (stats[0] == 'S' && stats[1] == 'P') {
         showFile3();
-        Serial.print("Numero de Registros: ");
-        Serial.println(registros3);
+        Serial2.print("Numero de Registros: ");
+        Serial2.println(registros3);
         showAvailableSpace();
         return;
       }
       if (stats[0] == 'A' && stats[1] == 'D' && stats[2] == 'E' && stats[3] == 'L') {
         AgFS.destroyFile();
         PosFS.destroyFile();
-        Serial.println("Delete ag OK");
+        Serial2.println("Delete ag OK");
         //id = 0;
         return;
       }
       /*  Lista de comandos:
            SF: exibe a lista inteira
-           RN(numero): exibe um registro especifico
+           RN(numero): exibe a partir de um registro especifico
            LST: exibe o ultimo registro
            DEL: deleta a lista inteira
+           ADEL: deleta os agendamentos
            STR: Salva a lista inteira em uma string "dados"
-
+           RST: Reset via serial
+           SA: exibe agendamentos por horario
+           SP: exibe agendamentos por posição
+         
            NENHUM COMANDO PODE TER 6 CARACTERES
       */
     }
 
   } else {
-    Serial.read();
+    Serial2.read();
     delay(10);
   }
 
 
 
-
+//Envia informações para pagina web via /events
   if ((millis() - lastTime) > timerDelay) {
-    //events.send("ping", NULL, millis());
     LeEntrada();
-    events.send(String(sentido).c_str(), "sentido", millis());
+    //String eventoEstado = String(String(sentido) + " " + String(seco) + " " + String(ligado));
+    events.send(sentido.c_str(), "sentido", millis());
     events.send(String(seco).c_str(), "seco", millis());
     events.send(String(ligado).c_str(), "ligado", millis());
-    events.send(String(STRperc).c_str(), "STRperc", millis());
+    events.send(String(perc).c_str(), "STRperc", millis());
     //events.send(String(hora).c_str(), "hora", millis());
     events.send(String(angulo.toInt()).c_str(), "angulo", millis());
-    events.send(String(rssi).c_str(), "rssi", millis());
+    //events.send(String(rssi).c_str(), "rssi", millis());
     lastTime = millis();
-    epoch = epoch + 1;
-    //Serial.println(epoch);
+    epoch = epoch + 5;
+    //Serial2.println(String(ligado).c_str());
   }
   endloop = millis() - tatual;
   Percentimetro();
@@ -950,36 +948,40 @@ void loop()
 
 }
 
+//Função para leitura de arquivos de configuração
+
 String readFile(fs::FS &fs, const char * path) {
-  //Serial.printf("Reading file: %s\r\n", path);
+  //Serial2.printf("Reading file: %s\r\n", path);
   File file = fs.open(path, "r");
   if (!file || file.isDirectory()) {
-    Serial.println("- empty file or failed to open file");
+    Serial2.println("- empty file or failed to open file");
     error = 1;
     return String();
   }
-  //Serial.println("- read from file:");
+  //Serial2.println("- read from file:");
   String fileContent;
   while (file.available()) {
     fileContent += String((char)file.read());
   }
   file.close();
   error = 0;
-  //Serial.println(fileContent);
+  //Serial2.println(fileContent);
   return fileContent;
 }
 
+//Função para gravação de arquivos de configuração
+
 void writeFile(fs::FS &fs, const char * path, const char * message) {
-  //Serial.printf("Writing file: %s\r\n", path);
+  //Serial2.printf("Writing file: %s\r\n", path);
   File file = fs.open(path, "w");
   if (!file) {
-    Serial.println("- failed to open file for writing");
+    Serial2.println("- failed to open file for writing");
     return;
   }
   if (file.print(message)) {
-    //Serial.println("- file written");
+    //Serial2.println("- file written");
   } else {
-    Serial.println("- write failed");
+    Serial2.println("- write failed");
   }
   file.close();
 }

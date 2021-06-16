@@ -1,3 +1,5 @@
+//leitura do percentimetro do painel
+
 void Percentimetro() {
   if (digitalRead(PERC) == LOW && auxP == 0) {
     while (auxP == 0) {

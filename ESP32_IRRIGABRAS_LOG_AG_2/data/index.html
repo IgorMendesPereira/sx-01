@@ -10,13 +10,12 @@
 
 <body>
   <h1>%NOME%</h1>
-  <p>Estado Atual: <span class="reading"><span id="sent">%SENTIDO%</span></span> <span class="reading"><span
-        id="ag">%SECO%</span></span> <span class="reading"><span id="liga">%LIGADO%</span></span>
+  <p>Estado Atual: <span class="reading"><span id="sent">%SENTIDO%</span></span> <span class="reading"><span id="ag">%SECO%</span></span> <span class="reading"><span id="liga">%LIGADO%</span></span>       
   <p>Percentimetro: <span class="reading"><span id="perc">%PERC%</span>&#37;</span></p>
   <p>Posicao: <span class="reading"><span id="angulo">%ANG%</span>&deg;</span></p>
   <div id="idgrafico" class="" style=--radius:%ANG%></div>
 
-  <form action="/get">
+  <form action="/get" target="hidden-form">
     Ligar: <input type="radio" name="Estado" value="1"> Desligar: <input type="radio" name="Estado" value="2"> <br>
     <br>
     Sentido : <br>
@@ -29,7 +28,7 @@
     <br>
     
     Percentimetro <input type="number" step="1" min="0" max="100" name="percentimetro" value="%PERCENTIMETRO%"><br>
-    <input type="submit" value="Confirmar" class="button button">
+    <input type="submit" value="Confirmar" class="button button" onclick="submitMessage()">
   </form><br>
   
   
@@ -83,17 +82,17 @@
         document.getElementById("perc").innerHTML = e.data;
       }, false);
 
-      source.addEventListener('hora', function (e) {
-        console.log("hora", e.data);
-        document.getElementById("hora").innerHTML = e.data;
-      }, false);
+      //source.addEventListener('hora', function (e) {
+      //  console.log("hora", e.data);
+      //  document.getElementById("hora").innerHTML = e.data;
+      //}, false);
       source.addEventListener('angulo', function (e) {
         console.log("angulo", e.data);
         document.getElementById("angulo").innerHTML = e.data;
       }, false);
-      source.addEventListener('rssi', function (e) {
-        console.log("rssi", e.data);
-      }, false);
+      //source.addEventListener('rssi', function (e) {
+      //  console.log("rssi", e.data);
+     //}, false);
     }
 
     var idgrafico = document.getElementById("idgrafico");
@@ -117,10 +116,13 @@
     else {
     }
 
-   
+    function submitMessage() {
+      setTimeout(function(){ document.location.reload(); }, 4100);
+    }
 
 
   </script>
+  <iframe style="display:none" name="hidden-form"></iframe>
 </body>
 
 </html>

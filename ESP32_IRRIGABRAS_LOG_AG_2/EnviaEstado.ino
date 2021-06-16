@@ -62,6 +62,7 @@ void EnviaEstado() {   //ok
 
   if (webflag == 1 && num != numw) {
     num = numw;
+    aux2 = 0;
   }
   INWEB[0]=' ';
   INWEB[1]=' ';
