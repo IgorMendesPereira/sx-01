@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <LoRa.h>
 #include <TinyGPS++.h>
-#include <axp20x.h>
+
 #include <time.h>
 #include <WiFi.h>
 #include "AsyncTCP.h"
@@ -49,6 +49,7 @@ AsyncWebServer server(80);
 const char* PARAM_LAT = "inputLat";
 const char* PARAM_LON = "inputLon";
 const char* PARAM_OFFSET = "inputOffset";
+const char* PARAM_SW = "inputSW";
 
 String processor(const String& var) {
   //Serial.println(var);
@@ -60,6 +61,8 @@ String processor(const String& var) {
   }
   else if (var == "inputOffset") {
     return readFile(SPIFFS, "/inputOffset.txt");
+  } else if (var == "SW") {
+    return readFile(SPIFFS, "/sw.txt");
   }
   return String();
 }
@@ -72,7 +75,7 @@ RTC_DATA_ATTR int bootCount = 0;
 
 TinyGPSPlus gps;
 HardwareSerial GPS(1);
-AXP20X_Class axp;
+
 double LATC = 0;
 //-22.255920;
 double LONC = 0;
@@ -84,6 +87,7 @@ double LAT;
 double LON;
 String LATs;
 String LONs;
+String syncword;
 
 double VALx;
 double VALy;
@@ -112,7 +116,7 @@ String ang;
 #define MISO 19
 #define MOSI 27
 #define SS 18
-#define RST 14
+#define RST 23
 #define DIO0 26
 
 //433E6 for Asia
@@ -138,24 +142,38 @@ void print_wakeup_reason() {
     default : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason); break;
   }
 }
+//
+//int unix() {
+//
+//  long cyear = ((gps.date.year()) - 1970) * 31556926; // Year - 1900
+//  long cmon = (gps.date.month() - 1 ) * 2629743;         // Month, where 0 = jan
+//  long cday = gps.date.day() * 86400;        // Day of the month
+//  long chour = hora * 3600;
+//  long cmin = gps.time.minute() * 60;
+//  long csec = gps.time.second();
+//  long t_of_day = cyear + cmon + cday + chour + cmin + csec;
+//
+//  return (t_of_day - 2762484);
+//}
+//
 
-int unix() {
+int TESTE() {
+    struct tm t;
+    time_t t_of_day;
 
-  long cyear = ((gps.date.year()) - 1970) * 31556926; // Year - 1900
-  long cmon = gps.date.month() * 2629743;         // Month, where 0 = jan
-  long cday = gps.date.day() * 86400;        // Day of the month
-  long chour = hora * 3600;
-  long cmin = gps.time.minute() * 60;
-  long csec = gps.time.second();
-  // Is DST on? 1 = yes, 0 = no, -1 = unknown
-  long t_of_day = cyear + cmon + cday + chour + cmin + csec;
-  //    Serial.print(gps.date.year());
-  //    Serial.print(" - ");
-  //    Serial.println(gps.date.day());
-  //    Serial.print("seconds since the Epoch: ");
-  //    Serial.println(t_of_day-2773398);
-  return (t_of_day - 2811141);
+    t.tm_year = gps.date.year()-1900;  // Year - 1900
+    t.tm_mon = (gps.date.month() - 1 );           // Month, where 0 = jan
+    t.tm_mday = gps.date.day();          // Day of the month
+    t.tm_hour = hora;
+    t.tm_min = gps.time.minute();
+    t.tm_sec = gps.time.second();
+    t.tm_isdst = -1;        // Is DST on? 1 = yes, 0 = no, -1 = unknown
+    t_of_day = mktime(&t);
+
+    //Serial.println(t_of_day);
+    return t_of_day;
 }
+
 
 
 void setup() {
@@ -163,25 +181,26 @@ void setup() {
   Serial.println("LoRa Sender Test");
   SPI.begin(SCK, MISO, MOSI, SS);
   LoRa.setPins(SS, RST, DIO0);
+
   if (!LoRa.begin(BAND)) {
     Serial.println("Starting LoRa failed!");
     while (1);
   }
-  LoRa.setSyncWord(0x99);
-  LoRa.setSpreadingFactor(8);
+  //LoRa.setSyncWord(0x96);
+  //  LoRa.setSpreadingFactor(6);
   Serial.println("LoRa Initializing OK!");
-  Wire.begin(21, 22);
-  if (!axp.begin(Wire, AXP192_SLAVE_ADDRESS)) {
-    Serial.println("AXP192 Begin PASS");
-  } else {
-    Serial.println("AXP192 Begin FAIL");
-  }
-  axp.setPowerOutPut(AXP192_LDO2, AXP202_ON);
-  axp.setPowerOutPut(AXP192_LDO3, AXP202_ON);
-  axp.setPowerOutPut(AXP192_DCDC2, AXP202_ON);
-  axp.setPowerOutPut(AXP192_EXTEN, AXP202_ON);
-  axp.setPowerOutPut(AXP192_DCDC1, AXP202_ON);
-  GPS.begin(9600, SERIAL_8N1, 34, 12);   //17-TX 18-RX
+  //  Wire.begin(21, 22);
+  //  if (!axp.begin(Wire, AXP192_SLAVE_ADDRESS)) {
+  //    Serial.println("AXP192 Begin PASS");
+  //  } else {
+  //    Serial.println("AXP192 Begin FAIL");
+  //  }
+  //  axp.setPowerOutPut(AXP192_LDO2, AXP202_ON);
+  //  axp.setPowerOutPut(AXP192_LDO3, AXP202_ON);
+  //  axp.setPowerOutPut(AXP192_DCDC2, AXP202_ON);
+  //  axp.setPowerOutPut(AXP192_EXTEN, AXP202_ON);
+  //  axp.setPowerOutPut(AXP192_DCDC1, AXP202_ON);
+  GPS.begin(9600, SERIAL_8N1, 12, 15);   //17-TX 18-RX
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
   //Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) + " Seconds");
   if (!SPIFFS.begin(true)) {
@@ -225,12 +244,21 @@ void setup() {
     else {
       inputMessage = "No message sent";
     }
+    if (request->hasParam(PARAM_SW)) {
+
+      syncword = request->getParam(PARAM_SW)->value();
+      writeFile(SPIFFS, "/sw.txt", syncword.c_str());
+      //LoRa.setSyncWord(syncword.toInt());
+      Serial.println(byte(syncword.toInt()));
+    }
     Serial.println(inputMessage);
   });
   server.begin();
   LATC = readFile(SPIFFS, "/inputLat.txt").toDouble();
   LONC = readFile(SPIFFS, "/inputLon.txt").toDouble();
-
+  syncword = readFile(SPIFFS, "/sw.txt").toInt();
+  //LoRa.setSyncWord(syncword.toInt());
+  Serial.println(syncword);
 }
 
 void loop() {
@@ -239,11 +267,12 @@ void loop() {
   LON = gps.location.lng();
   LATC = readFile(SPIFFS, "/inputLat.txt").toDouble();
   LONC = readFile(SPIFFS, "/inputLon.txt").toDouble();
+  //LoRa.setSyncWord(syncword.toInt());
   LATs = String(LAT);
   LONs = String(LON);
   Angulo();
 
-
+  
   horas = gps.time.hour();
   hora = horas.toInt() - 3;
   if (hora < 0) {
@@ -261,75 +290,26 @@ void loop() {
   minuto = gps.time.minute();
   seg = gps.time.second();
 
-  Saida = String(ang + "-" + horas + ":" + minuto + ":" + seg + "#" + unix());
-  //int rssi = LoRa.packetSnr();
-  Serial.println(Saida);
+  
   Serial.println(gps.satellites.value());
-  float temp = axp.getTemp();
-  //Serial.print("BAT Volate:");
-  //        Serial.print(axp.getBattVoltage());
-  //        Serial.println(" mV");
-  //    Serial.print(temp);
-  //    Serial.println("*C");
-  //      Serial.println(" ");
-  //
-  //Serial.println(rssi);
-  //Serial2.println("°");
-  //LoRa.println("**********************");
+  //TESTE();
   if (comeca == 1) {
+    Saida = String(ang + "-" + horas + ":" + minuto + ":" + seg + "#" + TESTE());
+  Serial.println(Saida);
     LoRa.beginPacket();
+    LoRa.write(byte(syncword.toInt()));
     LoRa.print(Saida);
-    LoRa.println("#");
+    LoRa.print("#");
     LoRa.endPacket();
   }
-  //  //LoRa.print();
-  //  LoRa.print("Latitude  : ");
-  //  LoRa.println(gps.location.lat(), 10);
-  //  LAT = gps.location.lat();
-  //  LoRa.print("Longitude : ");
-  //  LoRa.println(gps.location.lng(), 10);
-  //  LON = gps.location.lng();
-  //  LoRa.print("Satellites: ");
-  //  LoRa.println(gps.satellites.value());
-  //  LoRa.print("Altitude  : ");
-  //  LoRa.print(gps.altitude.feet() / 3.2808);
-  //  LoRa.println("M");
-  //  LoRa.print("Time      : ");
-  //  LoRa.print(gps.time.hour()-3);
-  //  LoRa.print(":");
-  //  LoRa.print(gps.time.minute());
-  //  LoRa.print(":");
-  //  LoRa.println(gps.time.second()+4);
-  //  LoRa.print("Speed     : ");
-  //  LoRa.println(gps.speed.kmph());
-  //  LoRa.print("Angulo calculado: ");
-  //  LoRa.println(angulo);
-  //  LoRa.print("Angulo funcao: ");
-  //  LoRa.println(angulo2);
-  //  LoRa.print("Human directions: ");
-  //  LoRa.println(TinyGPSPlus::cardinal(angulo2));
-  //
 
-  smartDelay(5000);
+  smartDelay(1000);
   if (bootCount >= 5) {
     bootCount = 0;
     //Serial.println("to indo");
     Serial.flush();
     //esp_deep_sleep_start();
   }
-
-  //  float InputLat = readFile(SPIFFS, "/inputLat.txt").toFloat();
-  //  Serial.print("*** Your inputString: ");
-  //  Serial.println(InputLat);
-  //
-  //  float InputLon = readFile(SPIFFS, "/inputLon.txt").toFloat();
-  //  Serial.print("*** Your inputInt: ");
-  //  Serial.println(InputLon);
-  //
-  //  int InputOffset = readFile(SPIFFS, "/inputOffset.txt").toInt();
-  //  Serial.print("*** Your inputFloat: ");
-  //  Serial.println(InputOffset);
-
 }
 
 static void smartDelay(unsigned long ms)
