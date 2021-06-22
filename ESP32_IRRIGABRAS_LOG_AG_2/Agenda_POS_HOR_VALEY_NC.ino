@@ -118,7 +118,7 @@ String percs;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-char stats[15];  // para entrada Serial2.
+String stats;  // para entrada Serial2.
 
 int auxP = 0;
 int perc = 0;
@@ -768,7 +768,7 @@ void loop()
 
   if ( Serial2.available() > 0 || webflag == 1) { //se o Serial2. receber uma mensagem de 6 caracteres ou receber uma msg do WebServer
     int buffersize =  Serial2.available();
-    //Serial2.println("COASda");
+    //Serial2.println(buffersize);
     Leitura(buffersize);
     if (buffersize == 6 || webflag == 1) {
 
