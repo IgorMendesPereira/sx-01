@@ -243,7 +243,7 @@ void AtuaPOS() {
 
         pos[i] = 9999999999;
         atuaP[i] = " ";
-        //delay(1000);
+        //delay(1000);                                
         LeEntrada();
         EnviaStatus();
         RETflag = 1;

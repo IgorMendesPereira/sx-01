@@ -1,4 +1,6 @@
 void EnviaEstado() {   //ok
+  
+  
   if (stats[0] == '3' && stats[1] == '5' && stats[2] == '1') {
     digitalWrite(LIGA, LOW);
     digitalWrite(RAUX, LOW);

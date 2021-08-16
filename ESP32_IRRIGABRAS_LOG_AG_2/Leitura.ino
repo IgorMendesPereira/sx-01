@@ -1,24 +1,18 @@
 void Leitura(int buffersize) {
-  digitalWrite(25,!digitalRead(25));
-  stats = Serial2.readString();
+  for (int i = 0; i < 50; i++) {
+    if ( i < buffersize) {
+      stats[i] =  Serial2.read();
+    } else {
+      stats[i] = '#';
+      i = 51;
+    }
+  }
   
-//  for (int i = 0; i < 50; i++) {
-//    if ( i < buffersize) {
-//      stats[i] =  Serial2.read();
-//    } else {
-//      stats[i] = '#';
-//      i = 51;
-//    }
-//  }
   if ((stats[0] == '3' || stats[0] == '4')  && webflag == 0) {
     Snum = String((stats[3] - '0') * 100 + (stats[4] - '0') * 10 + (stats[5] - '0'));
     num = Snum.toInt();
     aux2 = 0;
-    //Serial2.println(num);
   }
-   
-  //Serial2.println(stats);
-  
   if (webflag == 1) {
     stats[0] = INWEB[0];
     stats[1] = INWEB[1];

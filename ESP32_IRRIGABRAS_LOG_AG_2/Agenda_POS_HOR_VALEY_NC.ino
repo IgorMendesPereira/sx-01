@@ -118,11 +118,11 @@ String percs;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-String stats;  // para entrada Serial2.
+char stats[60];  // para entrada Serial2.
 
 int auxP = 0;
 int perc = 0;
-int entraperc =0;
+int entraperc = 0;
 
 int RETflag = 0;
 
@@ -233,27 +233,55 @@ void TaskDES( void *pvParameters) {
 
   for (;;) {
     // timerWrite(timer, 0); //ALIMENTA WD
-    if (digitalRead(AVREAL) == LOW && digitalRead(RTREAL) == LOW) {
-      //      timerWrite(timer, 0);
-      cont++;
-      delay(100);
-      if (cont > 50) {
-        digitalWrite(LIGA, HIGH);
-        digitalWrite(DESLIGA, HIGH);
-        digitalWrite(AVANCO, HIGH);
-        digitalWrite(REVERSO, HIGH);
-        digitalWrite(MOLHADO, HIGH);
-        digitalWrite(RAUX, HIGH);
-        digitalWrite(RAUXP, HIGH);
-        digitalWrite(PERCAT, HIGH);
+
+    if (TIPO == "NF") {
+      if (digitalRead(AVREAL) == LOW && digitalRead(RTREAL) == LOW) {
+        //      timerWrite(timer, 0);
+        cont++;
+        delay(100);
+        if (cont > 50) {
+          digitalWrite(LIGA, HIGH);
+          digitalWrite(DESLIGA, HIGH);
+          digitalWrite(AVANCO, HIGH);
+          digitalWrite(REVERSO, HIGH);
+          digitalWrite(MOLHADO, HIGH);
+          digitalWrite(RAUX, HIGH);
+          digitalWrite(RAUXP, HIGH);
+          digitalWrite(PERCAT, HIGH);
+          cont = 0;
+          perc = 0;
+          auxP = 0;
+          num = 0;
+          aux2 = 0;
+        }
+      } else {
         cont = 0;
-        perc = 0;
-        auxP = 0;
-        num = 0;
-        aux2 = 0;
       }
-    } else {
-      cont = 0;
+    }
+
+    if (TIPO == "NA") {
+      if (digitalRead(AVREAL) == HIGH && digitalRead(RTREAL) == HIGH) {
+        //      timerWrite(timer, 0);
+        cont++;
+        delay(100);
+        if (cont > 50) {
+          digitalWrite(LIGA, HIGH);
+          digitalWrite(DESLIGA, HIGH);
+          digitalWrite(AVANCO, HIGH);
+          digitalWrite(REVERSO, HIGH);
+          digitalWrite(MOLHADO, HIGH);
+          digitalWrite(RAUX, HIGH);
+          digitalWrite(RAUXP, HIGH);
+          digitalWrite(PERCAT, HIGH);
+          cont = 0;
+          perc = 0;
+          auxP = 0;
+          num = 0;
+          aux2 = 0;
+        }
+      } else {
+        cont = 0;
+      }
     }
     delay(10);
   }
@@ -262,7 +290,7 @@ void TaskDES( void *pvParameters) {
 void setup()
 {
   Serial2.begin(9600);   //INICIALIZA SERIAL2, PARA ESP32 LORAV2 NUNCA UTILIZAR A SERIAL1
-
+// Serial.begin(9600);
   //configureWatchdog();
 
   pinMode(LIGA, OUTPUT);
@@ -375,7 +403,7 @@ void setup()
   }
 
   //LoRa.setSyncWord(syncword.toInt());
-  
+
   Serial2.print("ESP32 IP as soft AP: ");
   Serial2.println(WiFi.softAPIP());
 
@@ -675,7 +703,7 @@ void setup()
 
   //---------------------------------------BOTOES DE MUDANCA DE PAGINA---------------------------------------------------------
 
-  
+
   server.on("/agen", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/agenda.html", String(), false, processor);
   });
@@ -690,7 +718,7 @@ void setup()
   });
 
   //BOTAO PARA APAGAR AGENDAMENTOS
-  
+
   server.on("/clearag", HTTP_GET, [](AsyncWebServerRequest * request) {
     AgFS.destroyFile();
     PosFS.destroyFile();
@@ -740,38 +768,65 @@ void loop()
   ArduinoOTA.handle();
 
   // RECEBE E TRATA O PACOTE LORA
-  
+
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
 
     while (LoRa.available()) {
       int LoRaAdressR = LoRa.read();
       //Serial2.println(LoRaAdressR);
-      if(LoRaAdressR == LoRaAdress){
-      LoRaData = LoRa.readString();
-      rssi = LoRa.packetRssi();
-      int separa = LoRaData.indexOf('-');
-      int fim = LoRaData.indexOf('#');
-      if (separa >= 0) {
-        angulo = LoRaData.substring(0, separa);
-        hora = LoRaData.substring((separa + 1), (fim));
-        epoch = (LoRaData.substring((LoRaData.indexOf('#') + 1), LoRaData.indexOf('\n'))).toInt();
-      }
-      }else{
+      if (LoRaAdressR == LoRaAdress) {
+        LoRaData = LoRa.readString();
+        rssi = LoRa.packetRssi();
+        int separa = LoRaData.indexOf('-');
+        int fim = LoRaData.indexOf('#');
+        if (separa >= 0) {
+          angulo = LoRaData.substring(0, separa);
+          hora = LoRaData.substring((separa + 1), (fim));
+          epoch = (LoRaData.substring((LoRaData.indexOf('#') + 1), LoRaData.indexOf('\n'))).toInt();
+        }
+      } else {
         String msgerrada = LoRa.readString();
         //Serial2.println("MSG ERRADA");
       }
-      }
     }
-  
+  }
+
 
 
   if ( Serial2.available() > 0 || webflag == 1) { //se o Serial2. receber uma mensagem de 6 caracteres ou receber uma msg do WebServer
     int buffersize =  Serial2.available();
-    //Serial2.println(buffersize);
-    Leitura(buffersize);
+    //Serial2.println("COASda");
+    
+    delay(1000);
+    epoch = epoch +1;
+    for (int i = 0; i < 50; i++) {
+      if ( Serial2.available()) {
+        stats[i] =  Serial2.read();
+      } else {
+        stats[i] = '#';
+        i = 51;
+      }
+    }
+    //Serial.print(stats);
+    if ((stats[0] == '3' || stats[0] == '4')  && webflag == 0) {
+      Snum = String((stats[3] - '0') * 100 + (stats[4] - '0') * 10 + (stats[5] - '0'));
+      num = Snum.toInt();
+      aux2 = 0;
+      buffersize = 6;
+    }
+    if(stats[2]=='2'){
+      buffersize = 6;
+      }
+    if (webflag == 1) {
+      stats[0] = INWEB[0];
+      stats[1] = INWEB[1];
+      stats[2] = INWEB[2];
+    }
+    //Serial.println("OI");
+    //Serial.println(stats);
     if (buffersize == 6 || webflag == 1) {
-
+      
       if (stats[0] == '0' && stats[1] == '0' && stats[2] == '0') {
         LeEntrada();
         EnviaStatus();
@@ -781,6 +836,7 @@ void loop()
       }
 
       if ( stats[0] != '0' || stats[1] != '0' || stats[2] != '0') {
+        
         EnviaEstado();
         LeEntrada();
         EnviaStatus();
@@ -798,7 +854,7 @@ void loop()
       }
 
       //DESLIGA
-      
+
       if (stats[0] == '0' && stats[1] == '0' && stats[2] == '2') {
         digitalWrite(DESLIGA, LOW);
         digitalWrite(RAUX, HIGH);
@@ -820,7 +876,7 @@ void loop()
         EnviaStatus();
       }
 
-      
+
       if (stats[0] == 'R' && stats[1] == 'S' && stats[2] == 'T') {
         Serial2.println("Reiniciando");
         delay(500);
@@ -913,7 +969,7 @@ void loop()
            RST: Reset via serial
            SA: exibe agendamentos por horario
            SP: exibe agendamentos por posição
-         
+
            NENHUM COMANDO PODE TER 6 CARACTERES
       */
     }
@@ -925,7 +981,7 @@ void loop()
 
 
 
-//Envia informações para pagina web via /events
+  //Envia informações para pagina web via /events
   if ((millis() - lastTime) > timerDelay) {
     LeEntrada();
     //String eventoEstado = String(String(sentido) + " " + String(seco) + " " + String(ligado));
@@ -938,7 +994,7 @@ void loop()
     //events.send(String(rssi).c_str(), "rssi", millis());
     lastTime = millis();
     epoch = epoch + 5;
-    //Serial2.println(String(ligado).c_str());
+    //Serial2.println(rssi);
   }
   endloop = millis() - tatual;
   Percentimetro();
