@@ -134,7 +134,7 @@ bool FS_File_Record3::readFileLastRecord(String *line, String *errorMsg)
 
   // Obtém o tamanho do arquivo
   sizeArq = pFile3.size();
-  Serial.println("Size: " + String(sizeArq));
+  Serial2.println("Size: " + String(sizeArq));
 
   // Se existe ao menos um registro
   if (sizeArq >= sizeOfRecord3)

@@ -1,7 +1,7 @@
 void Leitura(int buffersize) {
   for (int i = 0; i < 50; i++) {
     if ( i < buffersize) {
-      stats[i] =  Serial.read();
+      stats[i] =  Serial2.read();
     } else {
       stats[i] = '#';
       i = 51;

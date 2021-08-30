@@ -36,14 +36,14 @@ void Agendamento() {
       t.tm_sec = 0;
       t.tm_isdst = -1;        // Is DST on? 1 = yes, 0 = no, -1 = unknown
       t_of_day = mktime(&t);
-      //Serial.println(t_of_day);
+      //Serial2.println(t_of_day);
       horarioag = String(t_of_day);
       horaag[i] = horarioag.toInt();
       atuaag[i] = linha.substring(0, linha.indexOf('/'));
       percag[i] = linha.substring(linha.indexOf('/') + 1, linha.indexOf('-')).toInt();
-      //    Serial.println(horaag[i]);
-      //    Serial.println(atuaag[i]);
-      //    Serial.println(percag[i]);
+      //    Serial2.println(horaag[i]);
+      //    Serial2.println(atuaag[i]);
+      //    Serial2.println(percag[i]);
     }
   }
 
@@ -89,14 +89,14 @@ void Agendamento2() {
       t.tm_sec = 0;
       t.tm_isdst = -1;        // Is DST on? 1 = yes, 0 = no, -1 = unknown
       t_of_day = mktime(&t);
-      //Serial.println(t_of_day);
+      //Serial2.println(t_of_day);
       horarioag = String(t_of_day);
       horaag2[i] = horarioag.toInt();
       atuaag2[i] = linha.substring(0, linha.indexOf('/'));
       percag2[i] = linha.substring(linha.indexOf('/') + 1, linha.indexOf('-')).toInt();
-      //    Serial.println(horaag[i]);
-      //    Serial.println(atuaag[i]);
-      //    Serial.println(percag[i]);
+      //    Serial2.println(horaag[i]);
+      //    Serial2.println(atuaag[i]);
+      //    Serial2.println(percag[i]);
     }
   }
 
@@ -156,7 +156,7 @@ void AtuaAg() {
         digitalWrite(LIGA, HIGH);
       }
       if (atuaag[i] == "002") {
-        //Serial.println("DEsliga");
+        //Serial2.println("DEsliga");
         digitalWrite(DESLIGA, LOW);
         digitalWrite(RAUX, HIGH);
         digitalWrite(LIGA, HIGH);
@@ -175,14 +175,14 @@ void AtuaAg() {
         aux2 = 0;
       }
       num = percag[i];
-      //Serial.println(num);
+      //Serial2.println(num);
       AtuaPercentimetro();
       percag[i] = 0;
       horaag[i] = 9999999999;
       atuaag[i] = " ";
       LeEntrada();
       EnviaStatus();
-      Serial.println(contag);
+      Serial2.println(contag);
       //apaga os arquivos de agendamento quando todos sao executados
 
       if (contag == (registros2)) {
@@ -327,7 +327,7 @@ void AtuaPOS() {
       }
 
       if (contpos == (registros3)) {
-        //Serial.println("apaga");
+        //Serial2.println("apaga");
         PosFS.destroyFile();
         SPIFFS.remove("/agendaPOS.bin");
         contpos = 0;

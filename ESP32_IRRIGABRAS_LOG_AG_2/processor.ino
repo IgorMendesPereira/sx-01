@@ -9,7 +9,7 @@
 */
 
 String processor(const String& var) {
-  //Serial.println(var);
+  //Serial2.println(var);
   if (var == "SENTIDO") {
     if (sentido == "Avanco") {
       sentidow = "Avanco";

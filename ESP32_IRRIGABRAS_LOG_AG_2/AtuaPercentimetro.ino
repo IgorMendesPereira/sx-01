@@ -9,7 +9,7 @@ void AtuaPercentimetro() {
     digitalWrite(PERCAT, HIGH);
   }
   if (num > 0 && aux2 == 0) {
-    //Serial.println(num);
+    //Serial2.println(num);
     digitalWrite(RAUXP, LOW);
     digitalWrite(PERCAT, LOW);
     t4 = millis();

@@ -5,7 +5,7 @@ void showFile()
   String linha = "";
   registros = 0;
   // Exibe na Serial2.e no display o início do arquivo
-  //Serial.println("# Begin of file 1 #");
+  //Serial2.println("# Begin of file 1 #");
   errorMsg = "";
 
   // Posiciona o ponteiro do arquivo no início
@@ -15,7 +15,7 @@ void showFile()
   while (ObjFS.readFileNextRecord(&linha, &errorMsg) && linha != "")
   {
     dados += linha;
-    //Serial.println(linha);
+    //Serial2.println(linha);
     count++;
 
   }
@@ -23,11 +23,11 @@ void showFile()
   // Se existir mensagem de erro exibe na Serial2.e no display
   if (errorMsg != "")
   {
-    //Serial.println(errorMsg);
+    //Serial2.println(errorMsg);
   }
 
   // Exibe na Serial2.e no display o fim do arquivo
-  //Serial.println("# End of file 1#");
+  //Serial2.println("# End of file 1#");
   registros = count;
 }
 
@@ -38,7 +38,7 @@ void showFile2()
   String linha = "";
   registros2 = 0;
   // Exibe na Serial2.e no display o início do arquivo
-  //Serial.println("# Begin of file 2 #");
+  //Serial2.println("# Begin of file 2 #");
   errorMsg = "";
 
   // Posiciona o ponteiro do arquivo no início
@@ -48,7 +48,7 @@ void showFile2()
   while (AgFS.readFileNextRecord(&linha, &errorMsg) && linha != "")
   {
     dados += linha;
-    //Serial.println(linha);
+    //Serial2.println(linha);
     count++;
 
   }
@@ -56,11 +56,11 @@ void showFile2()
   // Se existir mensagem de erro exibe na Serial2.e no display
   if (errorMsg != "")
   {
-    //Serial.println(errorMsg);
+    //Serial2.println(errorMsg);
   }
 
   // Exibe na Serial2.e no display o fim do arquivo
-  //Serial.println("# End of file 2#");
+  //Serial2.println("# End of file 2#");
   registros2 = count;
 }
 
@@ -72,7 +72,7 @@ void showFile3()
   String linha = "";
   registros3 = 0;
   // Exibe na Serial2.e no display o início do arquivo
-  Serial.println("# Begin of file 3 #");
+  Serial2.println("# Begin of file 3 #");
   errorMsg = "";
 
   // Posiciona o ponteiro do arquivo no início
@@ -82,7 +82,7 @@ void showFile3()
   while (PosFS.readFileNextRecord(&linha, &errorMsg) && linha != "")
   {
     dados += linha;
-    Serial.println(linha);
+    Serial2.println(linha);
     count++;
 
   }
@@ -90,10 +90,10 @@ void showFile3()
   // Se existir mensagem de erro exibe na Serial2.e no display
   if (errorMsg != "")
   {
-    Serial.println(errorMsg);
+    Serial2.println(errorMsg);
   }
 
   // Exibe na Serial2.e no display o fim do arquivo
-  Serial.println("# End of file 3#");
+  Serial2.println("# End of file 3#");
   registros3 = count;
 }

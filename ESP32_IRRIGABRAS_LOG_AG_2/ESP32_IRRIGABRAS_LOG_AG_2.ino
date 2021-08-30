@@ -128,7 +128,7 @@ String percs;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-char stats[60];  // para entrada Serial.
+char stats[60];  // para entrada Serial2.
 
 int auxP = 0;
 int perc = 0;
@@ -207,31 +207,31 @@ String lastRecord = "";
 
 //Listagem dos Diretorios
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
-  Serial.printf("Listing directory: %s\n", dirname);
+  Serial2.printf("Listing directory: %s\n", dirname);
 
   File root = fs.open(dirname);
   if (!root) {
-    Serial.println("Failed to open directory");
+    Serial2.println("Failed to open directory");
     return;
   }
   if (!root.isDirectory()) {
-    Serial.println("Not a directory");
+    Serial2.println("Not a directory");
     return;
   }
 
   File file = root.openNextFile();
   while (file) {
     if (file.isDirectory()) {
-      Serial.print("  DIR : ");
-      Serial.println(file.name());
+      Serial2.print("  DIR : ");
+      Serial2.println(file.name());
       if (levels) {
         listDir(fs, file.name(), levels - 1);
       }
     } else {
-      Serial.print("  FILE: ");
-      Serial.print(file.name());
-      Serial.print("  SIZE: ");
-      Serial.println(file.size());
+      Serial2.print("  FILE: ");
+      Serial2.print(file.name());
+      Serial2.print("  SIZE: ");
+      Serial2.println(file.size());
     }
     file = root.openNextFile();
   }
@@ -249,7 +249,7 @@ void TaskDES( void *pvParameters) {
       tempo = tempo + (millis() - lastTime0) / 1000;
       lastTime0 = millis();
 
-      //Serial.println(tempo);
+      //Serial2.println(tempo);
 
     }
 
@@ -260,8 +260,8 @@ void TaskDES( void *pvParameters) {
 
 void setup()
 {
-  Serial.begin(9600);   //INICIALIZA SERIAL2, PARA ESP32 LORAV2 NUNCA UTILIZAR A SERIAL1
-  // Serial.begin(9600);
+  Serial2.begin(9600);   //INICIALIZA SERIAL2, PARA ESP32 LORAV2 NUNCA UTILIZAR A SERIAL1
+  // Serial2.begin(9600);
   //configureWatchdog();
 
   pinMode(LIGA, OUTPUT);
@@ -291,34 +291,34 @@ void setup()
   EstadoAnterior[1] = EstadoAtual[1];
   EstadoAnterior[2] = EstadoAtual[2];
   // Exibe na Serial2."Starting..." para debug
-  Serial.print("Starting...");
+  Serial2.print("Starting...");
 
   // Se não foi possível iniciar o File System, exibimos erro e reiniciamos o ESP
   if (!ObjFS.init())
   {
-    Serial.println("File system error");
+    Serial2.println("File system error");
     delay(1000);
     //ESP.restart();
   }
 
   // Exibimos mensagem
-  Serial.println("File system ok");
+  Serial2.println("File system ok");
 
   // Se o arquivo não existe, criamos o arquivo
   if (!ObjFS.fileExists())
   {
-    Serial.println("New file ObjFS");
+    Serial2.println("New file ObjFS");
     ObjFS.newFile(); // Cria o arquivo
   }
 
   if (!AgFS.fileExists())
   {
-    Serial.println("New file AgFS");
+    Serial2.println("New file AgFS");
     AgFS.newFile(); // Cria o arquivo
   }
   if (!PosFS.fileExists())
   {
-    Serial.println("New file PosFS");
+    Serial2.println("New file PosFS");
     PosFS.newFile(); // Cria o arquivo
   }
 
@@ -332,7 +332,7 @@ void setup()
   //INICIALIZA LORA
 
   if (!LoRa.begin(BAND)) {
-    Serial.println("Starting LoRa failed!");
+    Serial2.println("Starting LoRa failed!");
     while (1);
   }
 
@@ -350,7 +350,7 @@ void setup()
   while (WiFi.status() != WL_CONNECTED && contw != 8) {
 
     delay(500);
-    Serial.println("Connecting to WiFi..");
+    Serial2.println("Connecting to WiFi..");
     contw++;
   }
 
@@ -375,11 +375,11 @@ void setup()
 
   //LoRa.setSyncWord(syncword.toInt());
 
-  Serial.print("ESP32 IP as soft AP: ");
-  Serial.println(WiFi.softAPIP());
+  Serial2.print("ESP32 IP as soft AP: ");
+  Serial2.println(WiFi.softAPIP());
 
-  Serial.print("ESP32 IP on the WiFi network: ");
-  Serial.println(WiFi.localIP());
+  Serial2.print("ESP32 IP on the WiFi network: ");
+  Serial2.println(WiFi.localIP());
 
   //CODIGO DE GRAVACAO DE ARQUIVOS VIA OTA
 
@@ -391,23 +391,23 @@ void setup()
     else // U_SPIFFS
       type = "filesystem";
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-    Serial.println("Start updating " + type);
+    Serial2.println("Start updating " + type);
   })
   .onEnd([]() {
-    Serial.println("nEnd");
+    Serial2.println("nEnd");
   })
   .onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%r", (progress / (total / 100)));
+    Serial2.printf("Progress: %u%%r", (progress / (total / 100)));
     // timerWrite(timer, 0);
     //digitalWrite(2, !digitalRead(2));
   })
   .onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    Serial2.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial2.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial2.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial2.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial2.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial2.println("End Failed");
   });
   ArduinoOTA.begin();
 
@@ -496,7 +496,7 @@ void setup()
       LoRaAdress = (request->getParam(PARAM_SW)->value()).toInt();
       writeFile(SPIFFS, "/sw.txt", String(LoRaAdress).c_str());
       //LoRa.setSyncWord(syncword.toInt());
-      Serial.println(byte(LoRaAdress));
+      Serial2.println(byte(LoRaAdress));
     }
     //-----------------------------------------------------------------------------------------------------------------------
 
@@ -523,7 +523,7 @@ void setup()
 
         if (registros2 < 4) {
           if (values != "" && !AgFS.writeFile(values, &errorMsg))
-            Serial.println(errorMsg);
+            Serial2.println(errorMsg);
         }
 
         values = "";
@@ -534,7 +534,7 @@ void setup()
       if (request->getParam(PARAM_INPUT_2_1)->value() == "1") {
         String perc_a = request->getParam(PARAM_PERC_H)->value();
         //num = perc_a.toInt();
-        //Serial.println(num);
+        //Serial2.println(num);
         String horarioag = request->getParam(PARAM_INPUT_2_4)->value();
         String ano = (horarioag.substring(0, 4));
         String mes = (horarioag.substring(5, 7));
@@ -542,7 +542,7 @@ void setup()
         String hora = (horarioag.substring(11, 16));
         horarioag = String(hora + " - " + dia + "/" + mes + "/" + ano);
         String Sai = String(request->getParam(PARAM_INPUT_2_2)->value() + request->getParam(PARAM_INPUT_2_3)->value() + request->getParam(PARAM_INPUT_2_1)->value() + "/" + perc_a + "-" + horarioag);
-        Serial.println(Sai);
+        Serial2.println(Sai);
         values = Sai;
 
         while (values.length() < 30) {
@@ -551,7 +551,7 @@ void setup()
 
         if (registros2 < 4) {
           if (values != "" && !AgFS.writeFile(values, &errorMsg))
-            Serial.println(errorMsg);
+            Serial2.println(errorMsg);
         }
 
         values = "";
@@ -564,16 +564,16 @@ void setup()
           String hora = (horarioag.substring(11, 16));
           horarioag = String(hora + " - " + dia + "/" + mes + "/" + ano);
           String Sai = String("002/0-" + horarioag);
-          Serial.println(Sai);
+          Serial2.println(Sai);
           values = Sai;
 
           while (values.length() < 30) {
             values += " ";
           }
-          //Serial.println(values);
+          //Serial2.println(values);
           if (registros2 < 4) {
             if (values != "" && !AgFS.writeFile(values, &errorMsg))
-              Serial.println(errorMsg);
+              Serial2.println(errorMsg);
           }
           //showFile2();
           values = "";
@@ -592,7 +592,7 @@ void setup()
         String angW = request->getParam(PARAM_INPUT_3_3)->value();
         String acaoPOS;
         acaoPOS = "002";
-        Serial.println(acaoPOS + "-" + angW);
+        Serial2.println(acaoPOS + "-" + angW);
         values = String(acaoPOS + "-" + angW);
 
         while (values.length() < 10) {
@@ -600,7 +600,7 @@ void setup()
         }
 
         if (values != "" && !PosFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
+          Serial2.println(errorMsg);
 
         values = "";
         RETflag = 1;
@@ -619,11 +619,11 @@ void setup()
         }
 
         if (values != "" && !PosFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
+          Serial2.println(errorMsg);
 
         values = "";
         angW = request->getParam(PARAM_INPUT_3_4)->value();
-        //Serial.println("RET-" + angW);
+        //Serial2.println("RET-" + angW);
         values = String("002-" + angW);
 
         while (values.length() < 10) {
@@ -631,7 +631,7 @@ void setup()
         }
 
         if (values != "" && !PosFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
+          Serial2.println(errorMsg);
 
         values = "";
         AgendaPOS();
@@ -778,7 +778,7 @@ void setup()
       horaag[i] = 0;
       atuaag[i] = " ";
     }
-    Serial.println("Delete ag OK");
+    Serial2.println("Delete ag OK");
     request->send(SPIFFS, "/agenda.html", String(), false, processor);
   });
 
@@ -786,7 +786,7 @@ void setup()
   // Start server
   events.onConnect([](AsyncEventSourceClient * client) {
     if (client->lastId()) {
-      Serial.printf("Client reconnected! Last message ID that it got is: %u\n", client->lastId());
+      Serial2.printf("Client reconnected! Last message ID that it got is: %u\n", client->lastId());
     }
     // send event with message "hello!", id current millis
     // and set reconnect delay to 1 second
@@ -807,8 +807,8 @@ void setup()
 // Exibe o espaço total, usado e disponível na memoria
 void showAvailableSpace()
 {
-  Serial.println("Space: " + String(ObjFS.getTotalSpace()) + " Bytes");
-  Serial.println("Used: " + String(ObjFS.getUsedSpace()) + " Bytes");
+  Serial2.println("Space: " + String(ObjFS.getTotalSpace()) + " Bytes");
+  Serial2.println("Used: " + String(ObjFS.getUsedSpace()) + " Bytes");
 
 }
 
@@ -826,7 +826,7 @@ void loop()
 
     while (LoRa.available()) {
       int LoRaAdressR = LoRa.read();
-      //Serial.println(LoRaAdressR);
+      //Serial2.println(LoRaAdressR);
       if (LoRaAdressR == LoRaAdress) {
         LoRaData = LoRa.readString();
         rssi = LoRa.packetRssi();
@@ -839,7 +839,7 @@ void loop()
         }
       } else {
         String msgerrada = LoRa.readString();
-        //Serial.println("MSG ERRADA");
+        //Serial2.println("MSG ERRADA");
       }
     }
   }
@@ -894,21 +894,21 @@ void loop()
     }
   }
 
-  if ( Serial.available() > 0 || webflag == 1) { //se o Serial2.receber uma mensagem de 6 caracteres ou receber uma msg do WebServer
-    int buffersize =  Serial.available();
-    //Serial.println("COASda");
+  if ( Serial2.available() > 0 || webflag == 1) { //se o Serial2.receber uma mensagem de 6 caracteres ou receber uma msg do WebServer
+    int buffersize =  Serial2.available();
+    //Serial2.println("COASda");
 
     delay(1000);
     //epoch = epoch +1;
     for (int i = 0; i < 50; i++) {
-      if ( Serial.available()) {
-        stats[i] =  Serial.read();
+      if ( Serial2.available()) {
+        stats[i] =  Serial2.read();
       } else {
         stats[i] = '#';
         i = 51;
       }
     }
-    //Serial.print(stats);
+    //Serial2.print(stats);
     if ((stats[0] == '3' || stats[0] == '4')  && webflag == 0) {
       Snum = String((stats[3] - '0') * 100 + (stats[4] - '0') * 10 + (stats[5] - '0'));
       num = Snum.toInt();
@@ -923,8 +923,8 @@ void loop()
       stats[1] = INWEB[1];
       stats[2] = INWEB[2];
     }
-    //Serial.println("OI");
-    //Serial.println(stats);
+    //Serial2.println("OI");
+    //Serial2.println(stats);
     if (buffersize == 6 || webflag == 1) {
 
       if (stats[0] == '0' && stats[1] == '0' && stats[2] == '0') {
@@ -978,20 +978,20 @@ void loop()
 
 
       if (stats[0] == 'R' && stats[1] == 'S' && stats[2] == 'T') {
-        Serial.println("Reiniciando");
+        Serial2.println("Reiniciando");
         delay(500);
         ESP.restart();
       }
       if (stats[0] == 'D' && stats[1] == 'E' && stats[2] == 'L') {
         ObjFS.destroyFile();
-        Serial.println("Delete OK");
+        Serial2.println("Delete OK");
         id = 0;
         return;
       }
       if (stats[0] == 'S' && stats[1] == 'F') {
         showFile();
-        Serial.print("Numero de Registros: ");
-        Serial.println(registros);
+        Serial2.print("Numero de Registros: ");
+        Serial2.println(registros);
         showAvailableSpace();
         return;
       }
@@ -1002,21 +1002,21 @@ void loop()
         for (int i = (busca); i < id; i++) {
           int busca = statss.toInt() - 1;
           String reg = ObjFS.findRecord(i);
-          Serial.println(reg);
+          Serial2.println(reg);
           //delay(100);
         }
         return;
       }
       if (stats[0] == 'S' && stats[1] == 'T' && stats[2] == 'R') {
         showFile();
-        Serial.println("Historico:");
-        Serial.println(dados);
+        Serial2.println("Historico:");
+        Serial2.println(dados);
         return;
       }
       if (stats[0] == 'L' && stats[1] == 'S' && stats[2] == 'T') {
-        Serial.println("teste LST");
+        Serial2.println("teste LST");
         String reg = ObjFS.findRecord(id - 1);
-        Serial.println(reg);
+        Serial2.println(reg);
         return;
       }
       if (stats[0] == 'D' && stats[1] == 'I' && stats[2] == 'R') {
@@ -1027,39 +1027,39 @@ void loop()
       //******************************************************************agendamento*****************************************************************************************
 
       if (stats[0] == 'A' && stats[1] == 'G') {
-        Serial.print(String(stats));
+        Serial2.print(String(stats));
         values = String(stats).substring((String(stats).indexOf('>') + 1), (String(stats).indexOf('#')));
 
         while (values.length() < 30) {
           values += " ";
         }
-        //Serial.println(values);
+        //Serial2.println(values);
         if (values != "" && !AgFS.writeFile(values, &errorMsg))
-          Serial.println(errorMsg);
+          Serial2.println(errorMsg);
         values = "";
         Agendamento();
 
       }
       if (stats[0] == 'S' && stats[1] == 'A') {
         showFile2();
-        //        Serial.print("Numero de Registros: ");
-        //        Serial.println(registros2);
+        //        Serial2.print("Numero de Registros: ");
+        //        Serial2.println(registros2);
         //        showAvailableSpace();
-        Serial.println("Agendamentos por horario:");
-        Serial.print(dados);
+        Serial2.println("Agendamentos por horario:");
+        Serial2.print(dados);
         return;
       }
       if (stats[0] == 'S' && stats[1] == 'P') {
         showFile3();
-        Serial.print("Numero de Registros: ");
-        Serial.println(registros3);
+        Serial2.print("Numero de Registros: ");
+        Serial2.println(registros3);
         showAvailableSpace();
         return;
       }
       if (stats[0] == 'A' && stats[1] == 'D' && stats[2] == 'E' && stats[3] == 'L') {
         AgFS.destroyFile();
         PosFS.destroyFile();
-        Serial.println("Delete ag OK");
+        Serial2.println("Delete ag OK");
         //id = 0;
         return;
       }
@@ -1079,7 +1079,7 @@ void loop()
     }
 
   } else {
-    Serial.read();
+    Serial2.read();
     delay(10);
   }
 
@@ -1157,9 +1157,9 @@ void loop()
 
     //events.send(String(rssi).c_str(), "rssi", millis());
     lastTime = millis();
-    //    Serial.print(xPortGetCoreID());
-    //    Serial.print(" - ");
-    //    Serial.println(epoch);
+    //    Serial2.print(xPortGetCoreID());
+    //    Serial2.print(" - ");
+    //    Serial2.println(epoch);
   }
   endloop = millis() - tatual;
   Percentimetro();
@@ -1172,37 +1172,37 @@ void loop()
 //Função para leitura de arquivos de configuração
 
 String readFile(fs::FS &fs, const char * path) {
-  //Serial.printf("Reading file: %s\r\n", path);
+  //Serial2.printf("Reading file: %s\r\n", path);
   File file = fs.open(path, "r");
   if (!file || file.isDirectory()) {
-    Serial.println("- empty file or failed to open file");
+    Serial2.println("- empty file or failed to open file");
     error = 1;
     return String();
   }
-  //Serial.println("- read from file:");
+  //Serial2.println("- read from file:");
   String fileContent;
   while (file.available()) {
     fileContent += String((char)file.read());
   }
   file.close();
   error = 0;
-  //Serial.println(fileContent);
+  //Serial2.println(fileContent);
   return fileContent;
 }
 
 //Função para gravação de arquivos de configuração
 
 void writeFile(fs::FS &fs, const char * path, const char * message) {
-  //Serial.printf("Writing file: %s\r\n", path);
+  //Serial2.printf("Writing file: %s\r\n", path);
   File file = fs.open(path, "w");
   if (!file) {
-    Serial.println("- failed to open file for writing");
+    Serial2.println("- failed to open file for writing");
     return;
   }
   if (file.print(message)) {
-    //Serial.println("- file written");
+    //Serial2.println("- file written");
   } else {
-    Serial.println("- write failed");
+    Serial2.println("- write failed");
   }
   file.close();
 }
