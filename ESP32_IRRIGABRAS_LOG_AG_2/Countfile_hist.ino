@@ -14,18 +14,18 @@ void countFile() {
   while (ObjFS.readFileNextRecord(&linha, &errorMsg) && linha != "")
   {
     dados += linha;
-    //Serial2.println(linha);
+    //Serial.println(linha);
     count++;
 
   }
 
-  // Se existir mensagem de erro exibe na Serial2. e no display
+  // Se existir mensagem de erro exibe na Serial2.e no display
   if (errorMsg != "")
   {
-    Serial2.println(errorMsg);
+    Serial.println(errorMsg);
   }
 
-  // Exibe na Serial2. e no display o fim do arquivo
-  //Serial2.println("# End of file #");
+  // Exibe na Serial2.e no display o fim do arquivo
+  //Serial.println("# End of file #");
   registros = count;
 }

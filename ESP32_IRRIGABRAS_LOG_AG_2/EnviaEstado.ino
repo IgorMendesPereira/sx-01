@@ -8,7 +8,7 @@ void EnviaEstado() {   //ok
     digitalWrite(REVERSO, HIGH);
     digitalWrite(MOLHADO, HIGH);
     delay(espera);
-    epoch = epoch +espera/1000; 
+    //epoch = epoch +espera/1000; 
     digitalWrite(LIGA, HIGH);
 
   }
@@ -19,7 +19,7 @@ void EnviaEstado() {   //ok
     digitalWrite(AVANCO, HIGH);
     digitalWrite(MOLHADO, HIGH);
     delay(espera);
-    epoch = epoch +espera/1000;
+    //epoch = epoch +espera/1000;
     digitalWrite(LIGA, HIGH);
   }
   if (stats[0] == '3' && stats[1] == '6' && stats[2] == '1') {
@@ -29,7 +29,7 @@ void EnviaEstado() {   //ok
     digitalWrite(REVERSO, HIGH);
     digitalWrite(MOLHADO, LOW);
     delay(espera);
-    epoch = epoch +espera/1000;
+    //epoch = epoch +espera/1000;
     digitalWrite(LIGA, HIGH);
   }
   if (stats[0] == '4' && stats[1] == '6' && stats[2] == '1') {
@@ -39,7 +39,7 @@ void EnviaEstado() {   //ok
     digitalWrite(AVANCO, HIGH);
     digitalWrite(MOLHADO, LOW);
     delay(espera);
-    epoch = epoch +espera/1000;
+    //epoch = epoch +espera/1000;
     digitalWrite(LIGA, HIGH);
   }
   if (stats[0] == '0' && stats[1] == '0' && stats[2] == '2') {
@@ -52,7 +52,7 @@ void EnviaEstado() {   //ok
     digitalWrite(RAUXP, HIGH);
     digitalWrite(PERCAT, HIGH);
     delay(espera);
-    epoch = epoch +espera/1000;
+    //epoch = epoch +espera/1000;
     digitalWrite(DESLIGA, HIGH);
     perc = 0;
     auxP = 0;

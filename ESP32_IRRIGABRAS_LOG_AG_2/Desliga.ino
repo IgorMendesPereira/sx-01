@@ -8,7 +8,7 @@ void Desliga() {
   digitalWrite(RAUXP, HIGH);
   digitalWrite(PERCAT, HIGH);
   delay(espera);
-  epoch = epoch +espera/1000;
+  //epoch = epoch +espera/1000;
   digitalWrite(DESLIGA, HIGH);
   perc = 0;
   auxP = 0;

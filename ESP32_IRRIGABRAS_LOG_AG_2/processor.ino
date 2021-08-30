@@ -9,7 +9,7 @@
 */
 
 String processor(const String& var) {
-  //Serial2.println(var);
+  //Serial.println(var);
   if (var == "SENTIDO") {
     if (sentido == "Avanco") {
       sentidow = "Avanco";
@@ -18,7 +18,7 @@ String processor(const String& var) {
     } else {
       sentidow = "";
     }
-    //Serial2.print(ledState);
+    //Serial2. print(ledState);
     return sentidow;
   }
     if (var == "SECO") {
@@ -199,13 +199,16 @@ String processor(const String& var) {
     return TIPO;
   }
   if (var == "DELAY") {
-    return String(espera / 1000);
+    return String((espera / 1000));
   }
   if (var == "NOME") {
     return nome;
   }
   if (var == "SW") {
     return String(LoRaAdress);
+  }
+  if (var == "JSONhora") {
+    return JSONhora;
   }
 
   return String();

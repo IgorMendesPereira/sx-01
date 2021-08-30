@@ -15,23 +15,43 @@
   <p>Posicao: <span class="reading"><span id="angulo">%ANG%</span>&deg;</span></p>
   <div id="idgrafico" class="" style=--radius:%ANG%></div>
 
-  <form action="/get" target="hidden-form">
-    Ligar: <input type="radio" name="Estado" value="1"> Desligar: <input type="radio" name="Estado" value="2"> <br>
-    <br>
-    Sentido : <br>
+  <form action="/get" target="hidden-form" class="atua-form">
+    <fieldset class="radio-image">
+      <label for="play">
+          <input type="radio" name="Estado" id="play" value="1">
+          <img src="/play.png" alt="play" width="50%" height="50%">
+      </label>
+      <label for="stop">
+          <input type="radio" name="Estado" id="stop" value="2">
+          <img src="/stop.png" alt="stop" width="50%" height="50%">
+      </label>
+      <br>
+      
+      <label for="av">
+        <input type="radio" name="sentido" id="av" value="3">
+        <img src="/rotate_right_small.png" alt="av" width="50%" height="50%">
+      </label>
+      <label for="rv">
+        <input type="radio" name="sentido" id="rv" value="4">
+        <img src="/rotate_left_small.png" alt="rv" width="50%" height="50%">
+      </label>
+      <br>
     
-    Avanco: <input type="radio" name="sentido" value="3"> Reverso: <input type="radio" name="sentido" value="4"><br>
-    <br>
-    Agua: <br>
-    
-    Seco: <input type="radio" name="seco" value="5"> Molhado: <input type="radio" name="seco" value="6"><br>
-    <br>
-    
+      <label for="sec">
+        <input type="radio" name="seco" id="sec" value="5">
+        <img src="/water_off.png" alt="seco" width="50%" height="50%">
+      </label>
+      <label for="mol">
+        <input type="radio" name="seco" id="mol" value="6">
+        <img src="/water_on.png" alt="molhado" width="50%" height="50%">
+      </label>
+  </fieldset>
+<br>
+
     Percentimetro <input type="number" step="1" min="0" max="100" name="percentimetro" value="%PERCENTIMETRO%"><br>
+    <br>
     <input type="submit" value="Confirmar" class="button button" onclick="submitMessage()">
   </form><br>
-  
-  
   <a href="/agen"><button class="button buttonag">Agendamento</button></a>
   <hr color="gray">
   <!--
@@ -46,7 +66,7 @@
   </div>
   <script>
 
-
+    var teste
     if (!!window.EventSource) {
       var source = new EventSource('/events');
       source.addEventListener('open', function (e) {
@@ -88,6 +108,7 @@
       //}, false);
       source.addEventListener('angulo', function (e) {
         console.log("angulo", e.data);
+        
         document.getElementById("angulo").innerHTML = e.data;
       }, false);
       //source.addEventListener('rssi', function (e) {
@@ -119,6 +140,8 @@
     function submitMessage() {
       setTimeout(function(){ document.location.reload(); }, 4100);
     }
+
+    
 
 
   </script>
