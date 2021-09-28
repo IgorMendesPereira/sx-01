@@ -43,6 +43,30 @@ p{
   background-color: #62f5e1;
 }
 
+.bt_eco_on {
+  /* //display: flex; */
+  background-color: rgb(77, 148, 77);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  padding: 6px 6px;
+  text-decoration: none;
+  font-size: 20px;
+  margin: 2px;
+  cursor: pointer;
+}
+.bt_eco_off {
+  background-color: rgb(71, 71, 71);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  padding: 6px 6px;
+  text-decoration: none;
+  font-size: 20px;
+  margin: 2px;
+  cursor: pointer;
+}
+
 #Powered{
   display: -webkit-flex;
   display: flex;
@@ -89,6 +113,13 @@ fieldset{
   margin-right: 24px;
 }
 
+.check-switch{
+  border-width: 0px;
+  margin-left: 48%;
+  align-items: center;
+}
+
+
 .radio-image label > input{
     visibility: hidden;
 }
@@ -108,4 +139,29 @@ fieldset{
 .atua-form{
   margin-bottom: 8px;
   margin-top: 8px;
+}
+
+.check-switch label > input{
+  visibility: hidden;
+}
+.check-switch label > i {
+  display: block;
+  width: 32px;
+  height: 16px;
+  border: 1px solid #AAA;
+  border-radius: 5px;
+}
+.check-switch label > input + i:after {
+  content: "";
+  display: block;
+  width: 12px;
+  height:12px;
+  background: #AAA;
+  margin:2px;
+  border-radius:3px;
+  transition:0.2s;
+}
+.check-switch label >input:checked + i:after {
+  background: #333;
+  margin-left: 16px
 }

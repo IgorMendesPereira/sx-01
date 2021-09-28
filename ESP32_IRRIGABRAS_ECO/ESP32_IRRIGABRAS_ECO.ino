@@ -55,6 +55,12 @@ int rssi;
 
 String TIPO;
 String nome;
+String eco;
+int auxeco = 0;
+int inicioH = 0;
+int fimH = 0;
+int inicioM = 0;
+int fimM = 0;
 
 int PROGMEM horaag[4];
 int PROGMEM percag[4];
@@ -122,11 +128,22 @@ String ligado = "";
 
 String angulo;
 String hora;
+String horaH;
+String horaM;
+String horaS;
+int horaTS;
+
 
 int webflag = 0;
 String percs;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+const char botao_on[] PROGMEM = R"rawliteral(<a href="/get?modoeco=off"><button class="bt_eco_on">Eco</button></a>)rawliteral";
+const char botao_off[] PROGMEM = R"rawliteral(<a href="/get?modoeco=on"><button class="bt_eco_off">Eco</button></a>)rawliteral";
+const char eco_on[] PROGMEM = R"rawliteral(<div class="eco_on"></div>)rawliteral";
+const char eco_off[] PROGMEM = R"rawliteral(<div class="eco_off"></div>)rawliteral";
+
 
 char stats[60];  // para entrada Serial2.
 
@@ -161,6 +178,7 @@ int aux;
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
 
 AsyncEventSource events("/events");
 
@@ -205,6 +223,76 @@ String lastRecord = "";
 //}
 
 
+void notifyClients(String text) {
+  ws.textAll(text);
+}
+
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+  AwsFrameInfo *info = (AwsFrameInfo*)arg;
+  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
+    data[len] = 0;
+    if (strcmp((char*)data, "status") == 0) {
+      LeEntrada();
+      String EstadoWS = "#";
+//      Serial2.println(EstadoAtual[0]);
+//      Serial2.println(EstadoAtual[1]);
+//      Serial2.println(EstadoAtual[2]);
+      if(EstadoAtual[0]=='3' || EstadoAtual[0]=='4'){
+        if(EstadoAtual[0]=='3'){
+          EstadoWS += "Avanco ";
+        }
+        if(EstadoAtual[0]=='4'){
+          EstadoWS += "Reverso ";
+        }
+        
+      }
+      if(EstadoAtual[1]=='5' || EstadoAtual[1]=='6'){
+        if(EstadoAtual[1]=='5'){
+          EstadoWS += "Seco ";
+        }
+        if(EstadoAtual[1]=='6'){
+          EstadoWS += "Molhado ";
+        }
+        
+      }
+      if(EstadoAtual[2]=='1' || EstadoAtual[2]=='2'){
+        if(EstadoAtual[2]=='1'){
+          EstadoWS += "Ligado ";
+        }
+        if(EstadoAtual[2]=='2'){
+          EstadoWS = "#Desligado ";
+        }
+      }
+      
+      //Serial2.println(EstadoWS);
+      notifyClients(EstadoWS);
+    }
+  }
+}
+
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
+             void *arg, uint8_t *data, size_t len) {
+  switch (type) {
+    case WS_EVT_CONNECT:
+      Serial2.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+      break;
+    case WS_EVT_DISCONNECT:
+      Serial2.printf("WebSocket client #%u disconnected\n", client->id());
+      break;
+    case WS_EVT_DATA:
+      handleWebSocketMessage(arg, data, len);
+      break;
+    case WS_EVT_PONG:
+    case WS_EVT_ERROR:
+      break;
+  }
+}
+
+void initWebSocket() {
+  ws.onEvent(onEvent);
+  server.addHandler(&ws);
+}
+
 //Listagem dos Diretorios
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
   Serial2.printf("Listing directory: %s\n", dirname);
@@ -240,6 +328,10 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
 //task para desarmar os reles caso o painel seja desligado manualmente
 
 void TaskDES( void *pvParameters) {
+
+
+
+
   long lastTime0 = 0;
   long timer = 1000;
   for (;;) {
@@ -252,6 +344,19 @@ void TaskDES( void *pvParameters) {
       //Serial2.println(tempo);
 
     }
+
+    time_t rawtime = tempo;
+    struct tm  ts;
+    char       bufT[80];
+
+    // Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
+    ts = *localtime(&rawtime);
+    strftime(bufT, sizeof(bufT), "%H:%M-%S", &ts);
+    horaH = String(bufT).substring(0, String(bufT).indexOf(':'));
+    horaM = String(bufT).substring(String(bufT).indexOf(':') + 1, String(bufT).indexOf('-'));
+    horaS = String(bufT).substring(String(bufT).indexOf('-') + 1, String(bufT).indexOf('\n'));
+    horaTS = horaH.toInt() * 3600 + horaM.toInt() * 60 + horaS.toInt();
+
 
 
     delay(1);
@@ -353,13 +458,24 @@ void setup()
     Serial2.println("Connecting to WiFi..");
     contw++;
   }
+  initWebSocket();
 
   //inicializa as variaveis de configuração salvas na memoria
+  inicioH = String(readFile(SPIFFS, "/inicioeco.bin")).substring(0, String(String(readFile(SPIFFS, "/inicioeco.bin"))).indexOf(':')).toInt();
+  fimH =    String(readFile(SPIFFS, "/fimeco.bin")).substring(0, String(String(readFile(SPIFFS, "/fimeco.bin"))).indexOf(':')).toInt();
+  inicioM = String(readFile(SPIFFS, "/inicioeco.bin")).substring(String(String(readFile(SPIFFS, "/inicioeco.bin"))).indexOf(':') + 1 , String(String(readFile(SPIFFS, "/inicioeco.bin"))).indexOf('\n')).toInt();
+  fimM =    String(readFile(SPIFFS, "/fimeco.bin")).substring(String(String(readFile(SPIFFS, "/fimeco.bin"))).indexOf(':') + 1 , String(String(readFile(SPIFFS, "/fimeco.bin"))).indexOf('\n')).toInt();
+
 
   TIPO = readFile(SPIFFS, "/contator.txt");
   espera = readFile(SPIFFS, "/delay.txt").toInt() * 1000;
   nome = readFile(SPIFFS, "/nome.txt");
   LoRaAdress = readFile(SPIFFS, "/sw.txt").toInt();
+  if (readFile(SPIFFS, "/modoeco.bin") == "on") {
+    eco = "on";
+  } else {
+    eco = " ";
+  }
   //caso não haja nada na memoria será setado o defaut (NA;4s;Pivo 1;sw:0x99)
   if (error == 1) {
     TIPO = "NA";
@@ -372,6 +488,12 @@ void setup()
     LoRaAdress = 153;
     writeFile(SPIFFS, "/sw.txt", String(LoRaAdress).c_str());
   }
+  String RA = readFile(SPIFFS, "/estadoanteriorAUTO.bin");
+  stats[0] = RA[0];
+  stats[1] = RA[2];
+  stats[2] = RA[4];
+  numw = RA.substring(6, RA.indexOf('\n')).toInt();
+  EnviaEstado();
 
   //LoRa.setSyncWord(syncword.toInt());
 
@@ -463,13 +585,13 @@ void setup()
   server.on("/stop.png", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/stop.png");
   });
-   server.on("/water_off.png", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/water_off.png", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/water_off.png");
   });
   server.on("/water_on.png", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/water_on.png");
   });
-  
+
 
   //AQUISIÇÃO DOS PARAMETROS NA PAGINA WEB
 
@@ -499,7 +621,39 @@ void setup()
       Serial2.println(byte(LoRaAdress));
     }
     //-----------------------------------------------------------------------------------------------------------------------
+    if (request->hasParam("modoeco")) {
+      if (request->getParam("modoeco")->value() == "on") {
+        eco = request->getParam("modoeco")->value();
+      } else {
+        eco = " ";
+      }
+      writeFile(SPIFFS, "/modoeco.bin", eco.c_str());
+      request->send(SPIFFS, "/index.html", String(), false, processor);
+    }
+    if (request->hasParam("inicioeco") && request->hasParam("fimeco")) {
+      String inicio = request->getParam("inicioeco")->value();
+      String fim = request->getParam("fimeco")->value();
+      if (request->hasParam("switch")) {
+        eco = request->getParam("switch")->value();
+      } else {
+        eco = " ";
+      }
+      writeFile(SPIFFS, "/modoeco.bin", eco.c_str());
 
+      writeFile(SPIFFS, "/inicioeco.bin", inicio.c_str());
+      writeFile(SPIFFS, "/fimeco.bin", fim.c_str());
+      inicioH = String(readFile(SPIFFS, "/inicioeco.bin")).substring(0, String(String(readFile(SPIFFS, "/inicioeco.bin"))).indexOf(':')).toInt();
+      fimH =    String(readFile(SPIFFS, "/fimeco.bin")).substring(0, String(String(readFile(SPIFFS, "/fimeco.bin"))).indexOf(':')).toInt();
+      inicioM = String(readFile(SPIFFS, "/inicioeco.bin")).substring(String(String(readFile(SPIFFS, "/inicioeco.bin"))).indexOf(':') + 1 , String(String(readFile(SPIFFS, "/inicioeco.bin"))).indexOf('\n')).toInt();
+      fimM =    String(readFile(SPIFFS, "/fimeco.bin")).substring(String(String(readFile(SPIFFS, "/fimeco.bin"))).indexOf(':') + 1 , String(String(readFile(SPIFFS, "/fimeco.bin"))).indexOf('\n')).toInt();
+
+
+
+      //Serial2.println(readFile(SPIFFS, "/inicioeco.bin"));
+
+      //Serial2.println(readFile(SPIFFS, "/fimeco.bin"));
+      request->send(SPIFFS, "/eco.html", String(), false, processor);
+    }
 
     //---------------------------------------AGENDAMENTO POR HORARIO---------------------------------------------------------
 
@@ -525,6 +679,7 @@ void setup()
           if (values != "" && !AgFS.writeFile(values, &errorMsg))
             Serial2.println(errorMsg);
         }
+        
 
         values = "";
         Agendamento();
@@ -580,6 +735,7 @@ void setup()
           Agendamento();
         }
       }
+      ws.textAll("%");
       request->send(SPIFFS, "/agendaH.html", String(), false, processor);
     }
 
@@ -636,6 +792,7 @@ void setup()
         values = "";
         AgendaPOS();
       }
+      ws.textAll("%");
       request->send(SPIFFS, "/AgendaP.html", String(), false, processor);
     }
     //-----------------------------------------------------------------------------------------------------------------------
@@ -697,6 +854,9 @@ void setup()
   server.on("/agen", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/agenda.html", String(), false, processor);
   });
+  server.on("/eco", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/eco.html", String(), false, processor);
+  });
   server.on("/xama", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(200, "text/plain", String(String(EstadoAtual[0]) + "-" +  String(EstadoAtual[1]) + "-" + String(EstadoAtual[2]) + "-" + String(perc) + "-" + String(angulo.toInt()) + "-" + String(tempo)));
   });
@@ -739,6 +899,19 @@ void setup()
     serializeJson(doc, response);
     request->send(200, "application/json", response);
   });
+  server.on("/ecodata", HTTP_GET, [](AsyncWebServerRequest * request) {
+    StaticJsonDocument<200> doc;
+    JsonArray data = doc.createNestedArray("Eco");
+    JsonArray data1 = doc.createNestedArray("Inicio");
+    JsonArray data2 = doc.createNestedArray("Fim");
+
+    data.add(eco);
+    data1.add(readFile(SPIFFS, "/inicioeco.bin"));
+    data2.add(readFile(SPIFFS, "/fimeco.bin"));
+    String response;
+    serializeJson(doc, response);
+    request->send(200, "application/json", response);
+  });
   server.on("/hist", HTTP_GET, [](AsyncWebServerRequest * request) {
     showFile();
     //request->send(200, "text/plain", String(dados));
@@ -774,6 +947,7 @@ void setup()
   server.on("/clearag", HTTP_GET, [](AsyncWebServerRequest * request) {
     AgFS.destroyFile();
     PosFS.destroyFile();
+    ws.textAll("%");
     for (int i = 0; i < 4; i++) {
       horaag[i] = 0;
       atuaag[i] = " ";
@@ -801,7 +975,7 @@ void setup()
   String ids = reg.substring(0, idc);
   id = ids.toInt();
 
-
+  LeEntrada();
 }
 
 // Exibe o espaço total, usado e disponível na memoria
@@ -814,7 +988,49 @@ void showAvailableSpace()
 
 void loop()
 {
+
+
+  int iniTS = inicioH * 3600 + inicioM * 60;
+  int fimTS = fimH * 3600 + fimM * 60;
+  //int horaTS = horaH.toInt() * 3600 + horaM.toInt() * 60 + horaS.toInt();
+
+
+  if (eco == "on" && (iniTS <= horaTS && horaTS < fimTS + 15)) {
+
+    if (auxeco == 0) {
+      //atuacao do modo economia aqui    \/
+      //writeFile(SPIFFS, "/estadoanterior.bin", String(String(EstadoAtual[0]) + "-" +  String(EstadoAtual[1]) + "-" + String(EstadoAtual[2]) + "-" + String(perc)).c_str());
+      //Serial2.println(readFile(SPIFFS, "/estadoanterior.bin"));
+      if (TIPO == "NA" && (digitalRead(AVREAL) == LOW || digitalRead(RTREAL) == LOW)) {
+        DesligaEco();
+      }
+      if (TIPO == "NF" && (digitalRead(AVREAL) == HIGH || digitalRead(RTREAL) == HIGH)) {
+        DesligaEco();
+      }
+      //----------------------------------
+      auxeco = 1;
+      Serial2.println("MODO ECO");
+    }
+
+  } else {
+    if (auxeco == 1) {
+      Serial2.println("Sai do Eco");
+      auxeco = 0;
+      String estadoanterior = readFile(SPIFFS, "/estadoanterior.bin");
+      //Serial2.println(estadoanterior);
+      INWEB[0] = estadoanterior[0];
+      INWEB[1] = estadoanterior[2];
+      INWEB[2] = estadoanterior[4];
+      numw = estadoanterior.substring(6, estadoanterior.indexOf('\n')).toInt();
+      webflag = 1;
+      //Serial2.println(numw);
+      delay(2000);
+
+    }
+
+  }
   tatual = millis();
+
 
   //timerWrite(timer, 0);
   ArduinoOTA.handle();
@@ -835,7 +1051,9 @@ void loop()
         if (separa >= 0) {
           angulo = LoRaData.substring(0, separa);
           hora = LoRaData.substring((separa + 1), (fim));
-          tempo = (LoRaData.substring((LoRaData.indexOf('#') + 1), LoRaData.indexOf('\n'))).toInt();
+          if ((LoRaData.substring((LoRaData.indexOf('#') + 1), LoRaData.indexOf('\n')).toInt()) > 1631533539) {
+            tempo = (LoRaData.substring((LoRaData.indexOf('#') + 1), LoRaData.indexOf('\n'))).toInt();
+          }
         }
       } else {
         String msgerrada = LoRa.readString();
@@ -923,6 +1141,8 @@ void loop()
       stats[1] = INWEB[1];
       stats[2] = INWEB[2];
     }
+
+
     //Serial2.println("OI");
     //Serial2.println(stats);
     if (buffersize == 6 || webflag == 1) {
@@ -956,22 +1176,7 @@ void loop()
       //DESLIGA
 
       if (stats[0] == '0' && stats[1] == '0' && stats[2] == '2') {
-        digitalWrite(DESLIGA, LOW);
-        digitalWrite(RAUX, HIGH);
-        digitalWrite(LIGA, HIGH);
-        digitalWrite(AVANCO, HIGH);
-        digitalWrite(REVERSO, HIGH);
-        digitalWrite(MOLHADO, HIGH);
-        digitalWrite(RAUXP, HIGH);
-        digitalWrite(PERCAT, HIGH);
-        delay(espera);
-        //epoch = epoch + ((espera / 1000));
-        digitalWrite(DESLIGA, HIGH);
-        perc = 0;
-        auxP = 0;
-        num = 0;
-        numw = 0;
-        aux2 = 0;
+        Desliga();
         LeEntrada();
         EnviaStatus();
       }
@@ -1021,6 +1226,7 @@ void loop()
       }
       if (stats[0] == 'D' && stats[1] == 'I' && stats[2] == 'R') {
         listDir(SPIFFS, "/", 0);
+        showAvailableSpace();
         return;
       }
 
@@ -1089,10 +1295,12 @@ void loop()
   if ((millis() - lastTime) > timerDelay) {
     // epoch = epoch + 5;
     LeEntrada();
-    //String eventoEstado = String(String(sentido) + " " + String(seco) + " " + String(ligado));
-    events.send(sentido.c_str(), "sentido", millis());
-    events.send(String(seco).c_str(), "seco", millis());
-    events.send(String(ligado).c_str(), "ligado", millis());
+    //notifyClients();
+    ws.cleanupClients();
+//    String eventoEstado = String(String(sentido) + " " + String(seco) + " " + String(ligado));
+//    events.send(String(sentido).c_str(), "sentido", millis());
+//    events.send(String(seco).c_str(), "seco", millis());
+//    events.send(String(ligado).c_str(), "ligado", millis());
     events.send(String(perc).c_str(), "STRperc", millis());
     Agendamento2();
     StaticJsonDocument<400> doc;
@@ -1113,7 +1321,7 @@ void loop()
       if (atuaag2[i] == "461") {
         intencao = "Reverso Molhado Ligado";
       }
-      if (atuaag2[i] == "002") {
+      if (atuaag2[i] == "002") { 
         intencao = "Desligado";
       }
       data.add(intencao);
@@ -1138,10 +1346,10 @@ void loop()
 
     for (int i = 0; i < registros3; i++) {
       String intencao;
-      if(atuaP2[i]=="RET"){
+      if (atuaP2[i] == "RET") {
         intencao = "Retorno";
       }
-      if(atuaP2[i]=="002"){
+      if (atuaP2[i] == "002") {
         intencao = "Desliga";
       }
       datap.add(intencao);
@@ -1154,18 +1362,19 @@ void loop()
 
 
     events.send(String(angulo.toInt()).c_str(), "angulo", millis());
-
     //events.send(String(rssi).c_str(), "rssi", millis());
     lastTime = millis();
-    //    Serial2.print(xPortGetCoreID());
-    //    Serial2.print(" - ");
-    //    Serial2.println(epoch);
+    //
+    //    Serial2.println(iniTS);
+    //    Serial2.println(fimTS);
+    //    Serial2.println(horaTS);
   }
   endloop = millis() - tatual;
   Percentimetro();
   AtuaPercentimetro();
   AtuaAg();
   AtuaPOS();
+
 
 }
 

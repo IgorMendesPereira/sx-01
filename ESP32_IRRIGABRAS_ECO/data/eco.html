@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Modo Economia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+<form action="/get">
+    <h1>Modo Economia</h1>
+    <fieldset class="check-switch">
+        <label for="switch">
+            <input type="checkbox" name="switch" id="switch" %MODOECO%>
+            <i></i>
+        </label>
+    </fieldset>
+    Inicio:<input type="time" id="inicioeco" name="inicioeco" min="0" max="23" style="margin-right: 5px;" value="%INICIO%" required><br>
+    Fim: <input type="time" id="fimeco" name="fimeco" min="0" max="23" value="%FIMECO%" required><br>
+    <input type="submit" value="Confirmar" class="button" >
+</form>
+<a href="/"><button class="button volta">Voltar</button></a>
+</body>
+
+</html>

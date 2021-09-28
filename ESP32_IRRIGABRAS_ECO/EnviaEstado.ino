@@ -43,22 +43,7 @@ void EnviaEstado() {   //ok
     digitalWrite(LIGA, HIGH);
   }
   if (stats[0] == '0' && stats[1] == '0' && stats[2] == '2') {
-    digitalWrite(DESLIGA, LOW);
-    digitalWrite(RAUX, HIGH);
-    digitalWrite(LIGA, HIGH);
-    digitalWrite(AVANCO, HIGH);
-    digitalWrite(REVERSO, HIGH);
-    digitalWrite(MOLHADO, HIGH);
-    digitalWrite(RAUXP, HIGH);
-    digitalWrite(PERCAT, HIGH);
-    delay(espera);
-    //epoch = epoch +espera/1000;
-    digitalWrite(DESLIGA, HIGH);
-    perc = 0;
-    auxP = 0;
-    num = 0;
-    numw = 0;
-    aux2 = 0;
+    Desliga();
   }
 
 

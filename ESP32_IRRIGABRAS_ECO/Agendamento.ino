@@ -156,23 +156,7 @@ void AtuaAg() {
         digitalWrite(LIGA, HIGH);
       }
       if (atuaag[i] == "002") {
-        //Serial2.println("DEsliga");
-        digitalWrite(DESLIGA, LOW);
-        digitalWrite(RAUX, HIGH);
-        digitalWrite(LIGA, HIGH);
-        digitalWrite(AVANCO, HIGH);
-        digitalWrite(REVERSO, HIGH);
-        digitalWrite(MOLHADO, HIGH);
-        digitalWrite(RAUXP, HIGH);
-        digitalWrite(PERCAT, HIGH);
-        delay(espera);
-        //epoch = epoch + (espera / 1000);
-        digitalWrite(DESLIGA, HIGH);
-        perc = 0;
-        auxP = 0;
-        num = 0;
-        numw = 0;
-        aux2 = 0;
+        Desliga();
       }
       num = percag[i];
       //Serial2.println(num);
@@ -250,22 +234,7 @@ void AtuaPOS() {
       contpos++;
 
       if (atuaP[i] == "002" && RETflag == 1) {
-        digitalWrite(DESLIGA, LOW);
-        digitalWrite(RAUX, HIGH);
-        digitalWrite(LIGA, HIGH);
-        digitalWrite(AVANCO, HIGH);
-        digitalWrite(REVERSO, HIGH);
-        digitalWrite(MOLHADO, HIGH);
-        digitalWrite(RAUXP, HIGH);
-        digitalWrite(PERCAT, HIGH);
-        delay(espera);
-        // epoch = epoch + (espera / 1000);
-        digitalWrite(DESLIGA, HIGH);
-        perc = 0;
-        auxP = 0;
-        num = 0;
-        numw = 0;
-        aux2 = 0;
+        Desliga();
 
         pos[i] = 9999999999;
         atuaP[i] = " ";
@@ -279,22 +248,7 @@ void AtuaPOS() {
 
       if (atuaP[i] == "RET") {
         LeEntrada();
-        digitalWrite(DESLIGA, LOW);
-        digitalWrite(RAUX, HIGH);
-        digitalWrite(LIGA, HIGH);
-        digitalWrite(AVANCO, HIGH);
-        digitalWrite(REVERSO, HIGH);
-        digitalWrite(MOLHADO, HIGH);
-        digitalWrite(RAUXP, HIGH);
-        digitalWrite(PERCAT, HIGH);
-        delay(espera);
-        //epoch = epoch + (espera / 1000);
-        digitalWrite(DESLIGA, HIGH);
-        perc = 0;
-        auxP = 0;
-        num = 0;
-        numw = 0;
-        aux2 = 0;
+        Desliga();
         if (EstadoAtual[0] == '4') {
           num = 100;
           digitalWrite(LIGA, LOW);

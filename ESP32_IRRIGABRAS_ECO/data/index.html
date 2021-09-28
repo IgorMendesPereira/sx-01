@@ -10,13 +10,15 @@
 
 <body>
   <h1>%NOME%</h1>
-  <p>Estado Atual: <span class="reading"><span id="sent">%SENTIDO%</span></span> <span class="reading"><span id="ag">%SECO%</span></span> <span class="reading"><span id="liga">%LIGADO%</span></span>       
+
+  <p class="state">Estado Atual: <span id="state">%STATE%</span>       %BOTAO%      </p>
+
+  <p hidden>Estado Atual: <span class="reading"><span id="sent">%SENTIDO%</span></span> <span class="reading"><span id="ag">%SECO%</span></span> <span class="reading"><span id="liga">%LIGADO%</span></span></p> 
   <p>Percentimetro: <span class="reading"><span id="perc">%PERC%</span>&#37;</span></p>
   <p>Posicao: <span class="reading"><span id="angulo">%ANG%</span>&deg;</span></p>
   <div id="idgrafico" class="" style=--radius:%ANG%></div>
-
   <form action="/get" target="hidden-form" class="atua-form">
-    <fieldset class="radio-image">
+    <fieldset class="radio-image" %DISABLED%>
       <label for="play">
           <input type="radio" name="Estado" id="play" value="1">
           <img src="/play.png" alt="play" width="50%" height="50%">
@@ -59,11 +61,13 @@
     <img src="logo_irrigabras.png" alt="logo_irrigabras" width=500% height=100%>
   </div><br>
 -->
+  <a href="/eco"><button class="button buttoneco">Modo economia</button></a>
   <div id='Powered'>
    
     <img class="logosoil" src="logo_soil.png" alt="thsetser" width=136 height=120>
 
   </div>
+  %ESTADOECO%
   <script>
 
     var teste
@@ -82,20 +86,20 @@
         console.log("message", e.data);
       }, false);
 
-      source.addEventListener('sentido', function (e) {
-        console.log("sentido", e.data);
-        document.getElementById("sent").innerHTML = e.data;
-      }, false);
+      // source.addEventListener('sentido', function (e) {
+      //   console.log("sentido", e.data);
+      //   document.getElementById("sent").innerHTML = e.data;
+      // }, false);
 
-      source.addEventListener('seco', function (e) {
-        console.log("seco", e.data);
-        document.getElementById("ag").innerHTML = e.data;
-      }, false);
+      // source.addEventListener('seco', function (e) {
+      //   console.log("seco", e.data);
+      //   document.getElementById("ag").innerHTML = e.data;
+      // }, false);
 
-      source.addEventListener('ligado', function (e) {
-        console.log("ligado", e.data);
-        document.getElementById("liga").innerHTML = e.data;
-      }, false);
+      // source.addEventListener('ligado', function (e) {
+      //   console.log("ligado", e.data);
+      //   document.getElementById("liga").innerHTML = e.data;
+      // }, false);
 
       source.addEventListener('STRperc', function (e) {
         console.log("percentimetro", e.data);
@@ -111,26 +115,26 @@
         
         document.getElementById("angulo").innerHTML = e.data;
       }, false);
-      //source.addEventListener('rssi', function (e) {
+      //source.addEventListener('rssi', function (e) {s
       //  console.log("rssi", e.data);
      //}, false);
     }
 
     var idgrafico = document.getElementById("idgrafico");
     //var permissoesLogin = window.prompt('csk')
-    var sentido = document.getElementById("sent").innerHTML;
-    var agua = document.getElementById("ag").innerHTML;
+    var estado = document.getElementById("state").innerHTML;
+    //var agua = document.getElementById("ag").innerHTML;
 
-    if (sentido == "Avanco" && agua == "Molhado") {
+    if (estado.indexOf("Avanco Molhado") != -1) {
       idgrafico.className = "avancoligado";
 
-    } else if (sentido == "Avanco" && agua == "Seco") {
+    } else if (estado.indexOf("Avanco Seco") != -1) {
       idgrafico.className = "avancodesligado";
 
-    } else if (sentido == "Reverso" && agua == "Molhado") {
+    } else if (estado.indexOf("Reverso Molhado") != -1) {
       idgrafico.className = "reversoligado";
 
-    } else if (sentido == "Reverso" && agua == "Seco") {
+    } else if (estado.indexOf("Reverso Seco") != -1) {
       idgrafico.className = "reversodesligado";
 
     }
@@ -138,12 +142,52 @@
     }
 
     function submitMessage() {
+      var eco = document.getElementsByClassName("eco_on").length
+      if(eco === 1){
+        alert("Desative o modo economia para atuar")
+      }
       setTimeout(function(){ document.location.reload(); }, 4100);
     }
 
+
+  var gateway = `ws://${window.location.hostname}/ws`;
+  var websocket;
+  function initWebSocket() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    websocket.onopen    = onOpen;
+    websocket.onclose   = onClose;
+    websocket.onmessage = onMessage; // <-- add this line
+  }
+  function onOpen(event) {
+    console.log('Connection opened');
+    websocket.send('status');
+  }
+
+  function onClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+  }
+  function onMessage(event) {
+    var state = event.data;
     
+    if(String(state).search("#") != -1){
+      console.log("ESTADO MUDOU");
+      document.getElementById('state').innerHTML = String(state).substr(1);
+    }
+    if(String(state).search("%") != -1){
+      console.log("AGENDA MUDOU");
+    }
+    
+  }
 
+  window.addEventListener('load', onLoad);
 
+  function onLoad(event) {
+    initWebSocket();
+    
+  }
+    
   </script>
   <iframe style="display:none" name="hidden-form"></iframe>
 </body>

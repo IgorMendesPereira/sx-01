@@ -10,37 +10,40 @@
 
 String processor(const String& var) {
   //Serial2.println(var);
-  if (var == "SENTIDO") {
-    if (sentido == "Avanco") {
-      sentidow = "Avanco";
-    } else if (sentido == "Reverso") {
-      sentidow = "Reverso";
-    } else {
-      sentidow = "";
-    }
-    //Serial2. print(ledState);
-    return sentidow;
+  if (var == "STATE"){
+       String EstadoWS;
+       LeEntrada();
+//      Serial2.println(EstadoAtual[0]);
+//      Serial2.println(EstadoAtual[1]);
+//      Serial2.println(EstadoAtual[2]);
+      if(EstadoAtual[0]=='3' || EstadoAtual[0]=='4'){
+        if(EstadoAtual[0]=='3'){
+          EstadoWS = "Avanco ";
+        }
+        if(EstadoAtual[0]=='4'){
+          EstadoWS = "Reverso ";
+        }
+        
+      }
+      if(EstadoAtual[1]=='5' || EstadoAtual[1]=='6'){
+        if(EstadoAtual[1]=='5'){
+          EstadoWS += "Seco ";
+        }
+        if(EstadoAtual[1]=='6'){
+          EstadoWS += "Molhado ";
+        }
+        
+      }
+      if(EstadoAtual[2]=='1' || EstadoAtual[2]=='2'){
+        if(EstadoAtual[2]=='1'){
+          EstadoWS += "Ligado ";
+        }
+        if(EstadoAtual[2]=='2'){
+          EstadoWS = "Desligado ";
+        }
+      }
+      return EstadoWS;
   }
-    if (var == "SECO") {
-      if (seco == "Seco") {
-        secow = "Seco";
-      } else if (seco == "Molhado") {
-        secow = "Molhado";
-      }
-      if (EstadoAtual[2] == '2') {
-        secow = "";
-      }
-  
-      return secow;
-    }
-    if (var == "LIGADO") {
-      if ( EstadoAtual[2] == '2') {
-        ligadow = "Desligado";
-      } else {
-        ligadow = "Ligado";
-      }
-      return ligadow;
-    }
   if (var == "PERCENTIMETRO") {
     return inputMessage;
   }
@@ -207,8 +210,49 @@ String processor(const String& var) {
   if (var == "SW") {
     return String(LoRaAdress);
   }
+  if (var == "MODOECO") {
+    String swt;
+    if (eco == "on") {
+      swt = "checked";
+    }
+    else {
+      swt = "";
+    }
+    return  swt;
+  }
   if (var == "JSONhora") {
     return JSONhora;
+  }
+  if (var == "INICIO") {
+    String inieco = readFile(SPIFFS, "/inicioeco.bin");
+    return inieco;
+  }
+
+  if (var == "FIMECO") {
+    String f_eco = readFile(SPIFFS, "/fimeco.bin");
+    return f_eco;
+  }
+  if (var == "BOTAO") {
+    if (eco == "on") {
+      return botao_on;
+    } else {
+      return botao_off;
+    }
+
+  }
+  if (var == "ESTADOECO") {
+    if (auxeco == 1) {
+      return eco_on;
+    } else {
+      return eco_off;
+    }
+  }
+  if (var == "DISABLED") {
+    if (auxeco == 1) {
+      return "disabled";
+    } else {
+      return "";
+    }
   }
 
   return String();
