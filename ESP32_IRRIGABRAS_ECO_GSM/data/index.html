@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Soil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+  <h1>%NOME%</h1>
+
+  <p class="state">Estado Atual: <span id="state">%STATE%</span>       %BOTAO%      </p>
+
+  <p hidden>Estado Atual: <span class="reading"><span id="sent">%SENTIDO%</span></span> <span class="reading"><span id="ag">%SECO%</span></span> <span class="reading"><span id="liga">%LIGADO%</span></span></p> 
+  <p>Percentimetro: <span class="reading"><span id="perc">%PERC%</span>&#37;</span></p>
+  <p>Posicao: <span class="reading"><span id="angulo">%ANG%</span>&deg;</span></p>
+  <div id="idgrafico" class="" style=--radius:%ANG%></div>
+  <form action="/get" target="hidden-form" class="atua-form">
+    <fieldset class="radio-image" %DISABLED%>
+      <label for="play">
+          <input type="radio" name="Estado" id="play" value="1">
+          <img src="/play.png" alt="play" width="50%" height="50%">
+      </label>
+      <label for="stop">
+          <input type="radio" name="Estado" id="stop" value="2">
+          <img src="/stop.png" alt="stop" width="50%" height="50%">
+      </label>
+      <br>
+      
+      <label for="av">
+        <input type="radio" name="sentido" id="av" value="3">
+        <img src="/rotate_right_small.png" alt="av" width="50%" height="50%">
+      </label>
+      <label for="rv">
+        <input type="radio" name="sentido" id="rv" value="4">
+        <img src="/rotate_left_small.png" alt="rv" width="50%" height="50%">
+      </label>
+      <br>
+    
+      <label for="sec">
+        <input type="radio" name="seco" id="sec" value="5">
+        <img src="/water_off.png" alt="seco" width="50%" height="50%">
+      </label>
+      <label for="mol">
+        <input type="radio" name="seco" id="mol" value="6">
+        <img src="/water_on.png" alt="molhado" width="50%" height="50%">
+      </label>
+  </fieldset>
+<br>
+
+    Percentimetro <input type="number" step="1" min="0" max="100" name="percentimetro" value="%PERCENTIMETRO%"><br>
+    <br>
+    <input type="submit" value="Confirmar" class="button button" onclick="submitMessage()">
+  </form><br>
+  <a href="/agen"><button class="button buttonag">Agendamento</button></a>
+  <hr color="gray">
+  <!--
+  <div>
+    <img src="logo_irrigabras.png" alt="logo_irrigabras" width=500% height=100%>
+  </div><br>
+-->
+  <a href="/eco"><button class="button buttoneco">Modo economia</button></a>
+  <div id='Powered'>
+   
+    <img class="logosoil" src="logo_soil.png" alt="thsetser" width=136 height=120>
+
+  </div>
+  %ESTADOECO%
+  <script>
+
+    var teste
+    if (!!window.EventSource) {
+      var source = new EventSource('/events');
+      source.addEventListener('open', function (e) {
+        console.log("Events Connected");
+      }, false);
+      source.addEventListener('error', function (e) {
+        if (e.target.readyState != EventSource.OPEN) {
+          console.log("Events Disconnected");
+        }
+      }, false);
+
+      source.addEventListener('message', function (e) {
+        console.log("message", e.data);
+      }, false);
+
+      // source.addEventListener('sentido', function (e) {
+      //   console.log("sentido", e.data);
+      //   document.getElementById("sent").innerHTML = e.data;
+      // }, false);
+
+      // source.addEventListener('seco', function (e) {
+      //   console.log("seco", e.data);
+      //   document.getElementById("ag").innerHTML = e.data;
+      // }, false);
+
+      // source.addEventListener('ligado', function (e) {
+      //   console.log("ligado", e.data);
+      //   document.getElementById("liga").innerHTML = e.data;
+      // }, false);
+
+      source.addEventListener('STRperc', function (e) {
+        console.log("percentimetro", e.data);
+        document.getElementById("perc").innerHTML = e.data;
+      }, false);
+
+      //source.addEventListener('hora', function (e) {
+      //  console.log("hora", e.data);
+      //  document.getElementById("hora").innerHTML = e.data;
+      //}, false);
+      source.addEventListener('angulo', function (e) {
+        console.log("angulo", e.data);
+        
+        document.getElementById("angulo").innerHTML = e.data;
+      }, false);
+      //source.addEventListener('rssi', function (e) {s
+      //  console.log("rssi", e.data);
+     //}, false);
+    }
+
+    var idgrafico = document.getElementById("idgrafico");
+    //var permissoesLogin = window.prompt('csk')
+    var estado = document.getElementById("state").innerHTML;
+    //var agua = document.getElementById("ag").innerHTML;
+
+    if (estado.indexOf("Avanco Molhado") != -1) {
+      idgrafico.className = "avancoligado";
+
+    } else if (estado.indexOf("Avanco Seco") != -1) {
+      idgrafico.className = "avancodesligado";
+
+    } else if (estado.indexOf("Reverso Molhado") != -1) {
+      idgrafico.className = "reversoligado";
+
+    } else if (estado.indexOf("Reverso Seco") != -1) {
+      idgrafico.className = "reversodesligado";
+
+    }
+    else {
+    }
+
+    function submitMessage() {
+      var eco = document.getElementsByClassName("eco_on").length
+      if(eco === 1){
+        alert("Desative o modo economia para atuar")
+      }
+      setTimeout(function(){ document.location.reload(); }, 4100);
+    }
+
+
+  var gateway = `ws://${window.location.hostname}/ws`;
+  var websocket;
+  function initWebSocket() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    websocket.onopen    = onOpen;
+    websocket.onclose   = onClose;
+    websocket.onmessage = onMessage; // <-- add this line
+  }
+  function onOpen(event) {
+    console.log('Connection opened');
+    websocket.send('status');
+  }
+
+  function onClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+  }
+  function onMessage(event) {
+    var state = event.data;
+    
+    if(String(state).search("#") != -1){
+      console.log("ESTADO MUDOU");
+      document.getElementById('state').innerHTML = String(state).substr(1);
+    }
+    if(String(state).search("%") != -1){
+      console.log("AGENDA MUDOU");
+    }
+    
+  }
+
+  window.addEventListener('load', onLoad);
+
+  function onLoad(event) {
+    initWebSocket();
+    
+  }
+    
+  </script>
+  <iframe style="display:none" name="hidden-form"></iframe>
+</body>
+
+</html>

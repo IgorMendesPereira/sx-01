@@ -1,0 +1,155 @@
+<!DOCTYPE HTML><html>
+    <head>
+    <title>Agendamento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    </head>
+    <body>
+    <h1>    
+     Agendamento  
+    </h1>
+    
+
+<p></p>
+<label for="tipo">Tipo de Agendamento: </label> 
+<a href="/agendaP"><button class="button Horario">Posicao</button></a>
+<a href="/agendaH"><button class="button Posicao">Horario</button></a>
+
+    <h1>  
+    Agendamentos Programados
+    </h1>
+    <p> <div id="tabela" class="tabela"></div></p>
+    <p> <div id="tabelaP" class="tabela"></div></p>
+   <!-- <p><span class="reading"><span id="agenda1">%AGENDA1%</span></span></p> 
+   <p><span class="reading"><span id="agenda2">%AGENDA2%</span></span></p>
+   <p><span class="reading"><span id="agenda3">%AGENDA3%</span></span></p> 
+   <p><span class="reading"><span id="agenda4">%AGENDA4%</span></span></p> 
+   <p><span class="reading"><span id="agendapos1">%AGENDAPOS1%</span></span></p> 
+   <p><span class="reading"><span id="agendapos2">%AGENDAPOS2%</span></span></p>    -->
+    <a href="/clearag"><button class="clearag">Cancelar Agendamentos</button></a>
+    <a href="/"><button class="button volta">Voltar</button></a>
+    <script>
+        flag = 0;
+        flagpos =0;
+        //document.getElementById("tabela").style.alignContent = "center";
+        function criarTabela(JSONhora){
+            let tabela = document.createElement("table");
+            let thead = document.createElement("thead");
+            let tbody=document.createElement("tbody");
+            headers = ["Atua","Percentimetro","Hora"];
+            for(var j=0;j<3;j++){
+              var th = document.createElement('th')
+                texto = document.createTextNode(headers[j])
+                th.appendChild(texto)
+                thead.appendChild(th)
+            }
+            for(var i =0; i<JSONhora.Atua.length; i++){
+              var tr = document.createElement('tr')
+              for(var k=0;k<3;k++){
+                var td = document.createElement('td')
+                if(k===0){
+                  texto = document.createTextNode(JSONhora.Atua[i])
+                  td.appendChild(texto)
+                  tr.appendChild(td)
+                }   
+                if(k===1){
+                  texto = document.createTextNode(JSONhora.Percent[i])
+                  td.appendChild(texto)
+                  tr.appendChild(td)
+                }
+                if(k===2){
+                  texto = document.createTextNode(JSONhora.Hora[i])
+                  td.appendChild(texto)
+                  tr.appendChild(td)
+                }
+              }
+              tbody.appendChild(tr)
+            }
+            tabela.appendChild(thead)
+            tabela.appendChild(tbody)
+            
+            return tabela
+          }
+  
+          function criarTabela2(JSpos){
+          let tabela = document.createElement("table");
+          let thead = document.createElement("thead");
+          let tbody=document.createElement("tbody");
+          headers = ["Atua","Angulo"];
+          for(var j=0;j<2;j++){
+            var th = document.createElement('th')
+              texto = document.createTextNode(headers[j])
+              th.appendChild(texto)
+              thead.appendChild(th)
+          }
+          for(var i =0; i<JSpos.Atua.length; i++){
+            var tr = document.createElement('tr')
+            for(var k=0;k<2;k++){
+              var td = document.createElement('td')
+              if(k===0){
+                texto = document.createTextNode(JSpos.Atua[i])
+                td.appendChild(texto)
+                tr.appendChild(td)
+              }   
+              if(k===1){
+                texto = document.createTextNode(JSpos.POS[i])
+                td.appendChild(texto)
+                tr.appendChild(td)
+              }
+              
+            }
+            tbody.appendChild(tr)
+          }
+          tabela.appendChild(thead)
+          tabela.appendChild(tbody)
+          
+          return tabela
+        }
+  
+    
+        if (!!window.EventSource) {
+          var source = new EventSource('/events');
+          source.addEventListener('open', function (e) {
+            console.log("Events Connected");
+          }, false);
+          source.addEventListener('error', function (e) {
+            if (e.target.readyState != EventSource.OPEN) {
+              console.log("Events Disconnected");
+            }
+          }, false);
+        source.addEventListener('JSONhora', function (e) {
+            //console.log("JSONhora", e.data);
+            JSONhora = JSON.parse(e.data);
+            console.log(JSONhora);
+            if(flag === 0 && JSONhora.Atua.length!=0){
+              
+              document.getElementById("tabela").appendChild(criarTabela(JSONhora))
+              
+              flag = 1;
+            }
+            
+            //document.getElementById("JSONhora").innerHTML = e.data;
+          }, false);
+  
+          source.addEventListener('JSpos', function (e) {
+            //console.log("JSteste", e.data);
+            JSpos = JSON.parse(e.data);
+            console.log(JSpos);
+            if(flagpos === 0 &&  JSpos.Atua.length!=0){
+              
+              document.getElementById("tabelaP").appendChild(criarTabela2(JSpos))
+              
+              flagpos = 1;
+            }
+            
+            //document.getElementById("JSteste").innerHTML = e.data;
+          }, false);
+        }
+        
+        
+        
+        
+        
+      </script> 
+  </body>
+  </html>

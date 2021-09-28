@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Config</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+</head>
+<script>
+  function submitMessage() {
+    alert("Saved value to ESP SPIFFS");
+    setTimeout(function () { document.location.reload(false); }, 500);
+  }
+</script>
+
+<body>
+  <h1>Configuracoes</h1>
+  <form action="/get" target="hidden-form">
+    NA/NF (current value: %CONTATOR%): <input type="radio" id="NA" name="inputTipo" value="NA">
+    <label for="NA">NA</label>
+    <input type="radio" name="inputTipo" id="NF" value="NF">
+    <label for="NA">NF</label>
+    <input type="submit" value="Submit" onclick="submitMessage()">
+  </form><br>
+  <form action="/get" target="hidden-form">
+    Delay liga/desliga : <input type="number" name="inputDelay" value="%DELAY%">
+    <input type="submit" value="Submit" onclick="submitMessage()">
+  </form><br>
+  <form action="/get" target="hidden-form">
+    Nome do Pivo : <input type="text" name="inputNome" value="%NOME%">
+    <input type="submit" value="Submit" onclick="submitMessage()">
+  </form><br>
+  <form action="/get" target="hidden-form">
+    Sync Word : <input type="number" name="inputSW" value="%SW%" min="1" max="255">
+    <input type="submit" value="Submit" onclick="submitMessage()">
+  </form><br>
+  <form action="/get" target="hidden-form">
+    Pivo ID : <input type="text" name="inputPivoID" value="%PIVO_ID%">
+    <input type="submit" value="Submit" onclick="submitMessage()">
+  </form><br>
+  <iframe style="display:none" name="hidden-form"></iframe>
+</body>
+
+</html>
